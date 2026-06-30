@@ -1,0 +1,6 @@
+# Relative path rejection — all three file commands should fail
+file.write relative.txt, test
+file.read relative.txt
+file.append relative.txt, test
+# Failed HTTPS request — port 1 is not listening
+net.get "https://localhost:1/nonexistent"

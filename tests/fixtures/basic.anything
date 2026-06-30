@@ -1,0 +1,5 @@
+# Task 7 fixture: arbitrary extension execution (.anything)
+create.num x
+set $x, 42
+io.out $x
+math.add $x, 8

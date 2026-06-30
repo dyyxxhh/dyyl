@@ -1,0 +1,3 @@
+create.num a
+set a,0
+io.out logic.same a,0

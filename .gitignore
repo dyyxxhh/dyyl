@@ -1,0 +1,17 @@
+# Rust build output
+/target/
+
+# Local agent/tool state
+/.omo/
+/.codegraph/
+/.playwright-mcp/
+
+# Local build artifacts
+/dist/
+
+# Runtime/local artifacts
+*.log
+*.pid
+
+# Editor/OS noise
+.DS_Store

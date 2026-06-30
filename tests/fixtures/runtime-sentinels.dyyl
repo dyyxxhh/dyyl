@@ -1,0 +1,7 @@
+# Task 4 fixture: sentinel values for runtime errors
+dict.create d
+list.create l
+io.out $missing_var
+io.out dict.get(d, nonexistent)
+io.out list.get(l, 0)
+unknown.cmd

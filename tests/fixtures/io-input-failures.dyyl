@@ -1,0 +1,7 @@
+io.out before_in
+set $line, io.in
+io.out after_in
+set $key, io.get
+io.out after_key
+set $pwd, io.inpasswd
+io.out after_pwd

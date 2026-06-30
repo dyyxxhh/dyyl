@@ -1,0 +1,5 @@
+# Golden fixture: mcm.* commands return unknown sentinel
+# Run with: cargo run -- --debug tests/fixtures/mcm-unknown.dyyl
+# Expected: stdout gets -1, stderr gets unknown command warning
+
+mcm.game.install 1.20.4, MyVersion

@@ -1,0 +1,14 @@
+# Golden fixture: IO output and string operations
+# Covers: io.out, str.len, str.upper, str.lower, str.reverse, str.contains
+
+# Basic IO
+io.out hello world
+io.out 42
+
+# String operations
+io.out str.len(hello)
+io.out str.upper(hello)
+io.out str.lower(HELLO)
+io.out str.reverse(abc)
+io.out str.contains(hello, ell)
+io.out str.contains(hello, xyz)

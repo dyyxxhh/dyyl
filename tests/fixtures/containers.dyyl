@@ -1,0 +1,24 @@
+# Golden fixture: dict and list operations
+# Covers: dict create/set/get/keys/len, list create/append/sort/get/len
+
+# Dict operations
+dict.create d
+dict.set d, name, alice
+dict.set d, age, 30
+io.out dict.get(d, name)
+io.out dict.get(d, age)
+io.out dict.len(d)
+io.out dict.has(d, name)
+io.out dict.has(d, missing)
+
+# List operations
+list.create l
+list.append l, 30
+list.append l, 10
+list.append l, 20
+io.out list.len(l)
+io.out list.get(l, 0)
+list.sort l
+io.out list.get(l, 0)
+io.out list.get(l, 1)
+io.out list.get(l, 2)

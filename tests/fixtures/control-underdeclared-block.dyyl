@@ -1,0 +1,14 @@
+# Task 6 fixture: underdeclared block span
+# Outer if declares 1 body line, but the inner construct at that
+# body line needs 3 body lines (inner if + its body). The runtime must
+# skip the declared body lines, emit sentinel + debug warning (NOT panic),
+# and continue with top-level commands after the block's range.
+
+create.num x
+set $x, 1
+logic.if $x, 1
+  logic.if $x, 3
+    io.out inner_line1
+    io.out inner_line2
+    io.out inner_line3
+io.out done

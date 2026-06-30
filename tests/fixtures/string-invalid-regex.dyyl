@@ -1,0 +1,4 @@
+# Fixture for testing invalid regex sentinel behavior (Task 8).
+# str.match with invalid regex "(" should return sentinel Str("")
+# and debug stderr should include "regex" and the line number.
+str.match "abc", "("

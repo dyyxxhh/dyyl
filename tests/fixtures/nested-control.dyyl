@@ -1,0 +1,27 @@
+# Golden fixture: nested control flow with execution counts
+# Covers: nested if, while, for with counters
+
+# Nested if: outer declares 2 lines (inner if + its body)
+create.num x
+set $x, 1
+logic.if $x, 2
+  logic.if $x, 1
+    io.out nested_if
+
+# While loop: run 3 iterations
+create.num i
+set $i, 0
+logic.while logic.less($i, 3), 2
+  io.out while_iter
+  set $i, math.add($i, 1)
+
+# For loop: run 2 iterations
+logic.for 2, 1
+  io.out for_iter
+
+# Nested for inside if
+create.num flag
+set $flag, 1
+logic.if $flag, 2
+  logic.for 2, 1
+    io.out nested_for

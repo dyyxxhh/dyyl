@@ -1,0 +1,9 @@
+# task 2 fixture: quoting, escaping, comments, and numeric literals
+io.out hello world
+io.out "hello world"
+io.out hello\, world
+io.out "line one\nline two"
+io.out hello#trailing comment
+set $i, 42, 1/3
+io.out √2
+io.out π

@@ -1,0 +1,8 @@
+# Missing dict/list access returns -1
+dict.create d
+io.out dict.get(d, missing_key)
+list.create l
+list.append l, 10
+io.out list.get(l, 5)
+io.out list.get(l, -1)
+list.remove l, 99

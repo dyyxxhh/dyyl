@@ -1,0 +1,25 @@
+# Task 5 fixture: math failure cases
+# Expected outputs are documented sentinels with debug warnings.
+# Run with: cargo run -- --debug tests/fixtures/math-failures.dyyl
+
+# Division by zero → sentinel -1 + debug warning
+io.out math.div 5, 0
+
+# Modulo by zero → sentinel -1 + debug warning
+io.out math.surplus 5, 0
+
+# Strike by zero → sentinel -1 + debug warning
+io.out math.strike 5, 0
+
+# Mixed multi-char string + integer → empty sentinel
+io.out math.add "hello", 1
+
+# Non-integer numeric + string → -1 sentinel
+io.out math.add 1/2, "world"
+
+# Non-integer char offset → empty sentinel (approx - not a valid scalar offset)
+io.out math.sub "b", 1/2
+
+# Invalid Unicode scalar offset → empty sentinel
+# U+10FFFF + 1 = U+110000 which is out of range
+io.out math.add "\u{10FFFF}", 1

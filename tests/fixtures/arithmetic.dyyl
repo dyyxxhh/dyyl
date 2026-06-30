@@ -1,0 +1,28 @@
+# Golden fixture: arithmetic operations and CAS display
+# Covers: basic math, exact rationals, roots, constants, trig, char arithmetic
+
+# Basic arithmetic
+io.out math.add 1, 2
+io.out math.sub 5, 3
+io.out math.multi 2, 3
+io.out math.div 6, 2
+io.out math.pow 2, 3
+io.out math.sqrt 4
+
+# Trig
+io.out math.sin 0
+io.out math.cos 0
+
+# CAS display: exact rationals
+io.out 1/3
+io.out 5/3
+
+# CAS display: symbolic constants and roots
+io.out √2
+io.out π
+
+# Approximate
+io.out math.approx π
+
+# Char arithmetic
+io.out math.add "a", 1

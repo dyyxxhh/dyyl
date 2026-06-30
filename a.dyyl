@@ -1,0 +1,7 @@
+create.num a
+set a,0
+io.out logic.same $a,0
+logic.while logic.same $a,0,3
+io.out dyyl nb?
+logic.if logic.same nb,io.in,1
+set a,1
