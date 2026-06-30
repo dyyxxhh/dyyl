@@ -1,0 +1,14 @@
+Task 8 — Manual QA Receipt
+Command: cargo run -- --debug tests/fixtures/string-invalid-regex.dyyl
+Exit code: 0
+Fixture: tests/fixtures/string-invalid-regex.dyyl (line 4: str.match "abc", "(")
+
+Stdout: (empty — expected. str.match returns Num(0|1) on success, Str("") sentinel on invalid regex.
+The script has no io.out, so nothing is printed to stdout. The sentinel Str("") is
+the return value, not stdout output.)
+
+Stderr: (see .omo/evidence/task-8-dyyl-language-interpreter.stderr)
+  line 4: str.match "abc", "("
+    reason: invalid regex pattern '('
+
+Verification: stderr contains "line 4" and "regex" as required by acceptance criteria.

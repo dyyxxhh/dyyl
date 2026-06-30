@@ -1,0 +1,353 @@
+{
+  "schema_version": 2,
+  "active_work_id": "dyyl-language-interpreter-64a95ee8",
+  "works": {
+    "dyyl-language-interpreter-64a95ee8": {
+      "work_id": "dyyl-language-interpreter-64a95ee8",
+      "active_plan": "/mnt/Storage1_xe6x96xb0xe5x8axa0xe5x8dxb7/nas/lucky/dyyl/.omo/plans/dyyl-language-interpreter.md",
+      "plan_name": "dyyl-language-interpreter",
+      "status": "completed",
+      "started_at": "2026-06-27T09:08:06.625Z",
+      "updated_at": "2026-06-28T05:53:48.750Z",
+      "session_ids": [
+        "opencode:ses_0f7a9edffffeUJnAazQgLfHZxS",
+        "opencode:ses_0f7956eaaffemOUsFr6becfWNC",
+        "opencode:ses_0f6688526ffeLQvigOcsTx7Luw"
+      ],
+      "session_origins": {
+        "opencode:ses_0f7a9edffffeUJnAazQgLfHZxS": "direct",
+        "opencode:ses_0f7956eaaffemOUsFr6becfWNC": "direct",
+        "opencode:ses_0f6688526ffeLQvigOcsTx7Luw": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {
+        "todo:1": {
+          "task_key": "todo:1",
+          "task_label": "1",
+          "task_title": "`src/parser/helpers.rs` line 12: `s.split_whitespace().next().unwrap_or(s)`",
+          "session_id": "opencode:ses_0f37169ecffemqvLy4EO329wqG",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "started_at": "2026-06-27T09:54:51.803Z",
+          "status": "completed",
+          "updated_at": "2026-06-28T04:51:37.759Z",
+          "ended_at": "2026-06-28T04:51:37.758Z",
+          "elapsed_ms": 68205955
+        },
+        "todo:2": {
+          "task_key": "todo:2",
+          "task_label": "2",
+          "task_title": "Build parser lexer with comments, optional-quote strings, backslash escaping, literals, and no-continuation rules",
+          "session_id": "opencode:ses_0f7665c59ffemmjk7Cz1NLY7i5",
+          "agent": "Sisyphus-Junior",
+          "category": "deep",
+          "updated_at": "2026-06-27T11:05:04.159Z",
+          "started_at": "2026-06-27T11:05:04.159Z",
+          "status": "running"
+        },
+        "todo:4": {
+          "task_key": "todo:4",
+          "task_label": "4",
+          "task_title": "Implement value model, environment, sentinels, and debug diagnostics",
+          "session_id": "opencode:ses_0f66483e6ffeF7ndmgbrefLS1y",
+          "agent": "Sisyphus-Junior",
+          "started_at": "2026-06-27T15:20:00.917Z",
+          "status": "running",
+          "updated_at": "2026-06-27T16:04:17.975Z"
+        },
+        "todo:3": {
+          "task_key": "todo:3",
+          "task_label": "3",
+          "task_title": "Implement command grammar, greedy RHS, parentheses, and placeholder disambiguation",
+          "session_id": "opencode:ses_0f66483e6ffeF7ndmgbrefLS1y",
+          "agent": "Sisyphus-Junior",
+          "started_at": "2026-06-27T15:20:10.699Z",
+          "status": "running",
+          "updated_at": "2026-06-27T15:30:13.639Z"
+        },
+        "todo:5": {
+          "task_key": "todo:5",
+          "task_label": "5",
+          "task_title": "Implement CAS/display numeric layer",
+          "session_id": "opencode:ses_0f628f3c1ffexvIyBt1ikqQjHv",
+          "agent": "Sisyphus-Junior",
+          "started_at": "2026-06-27T16:38:39.473Z",
+          "status": "running",
+          "updated_at": "2026-06-27T17:08:33.339Z"
+        },
+        "todo:6": {
+          "task_key": "todo:6",
+          "task_label": "6",
+          "task_title": "Implement core runtime commands: create, set, logic, and control flow",
+          "session_id": "opencode:ses_0f448e14cffeVhYA15wflMTcNN",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "started_at": "2026-06-27T17:51:00.928Z",
+          "status": "running",
+          "updated_at": "2026-06-28T00:59:45.022Z"
+        },
+        "todo:7": {
+          "task_key": "todo:7",
+          "task_label": "7",
+          "task_title": "Implement CLI entry point and script runner",
+          "session_id": "opencode:ses_0f43e7b91ffeN0s5PnRrLBrXY6",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "updated_at": "2026-06-28T01:05:56.493Z",
+          "started_at": "2026-06-28T01:05:56.493Z",
+          "status": "running"
+        },
+        "todo:8": {
+          "task_key": "todo:8",
+          "task_label": "8",
+          "task_title": "Implement string commands and regex hybrid engine",
+          "session_id": "opencode:ses_0f4397645ffemT9ZV1dPhytHP8",
+          "agent": "Sisyphus-Junior",
+          "started_at": "2026-06-28T01:32:13.841Z",
+          "status": "running",
+          "updated_at": "2026-06-28T01:43:29.153Z"
+        },
+        "todo:9": {
+          "task_key": "todo:9",
+          "task_label": "9",
+          "task_title": "Implement dict and list commands",
+          "session_id": "opencode:ses_0f4142edeffeBgAcp8sIrwF0wE",
+          "agent": "Sisyphus-Junior",
+          "started_at": "2026-06-28T02:16:15.018Z",
+          "status": "running",
+          "updated_at": "2026-06-28T02:23:52.943Z"
+        },
+        "todo:10": {
+          "task_key": "todo:10",
+          "task_label": "10",
+          "task_title": "Implement file and network commands with isolated tests",
+          "session_id": "opencode:ses_0f3f19624ffelg1H0FGNxVrK66",
+          "agent": "Sisyphus-Junior",
+          "category": "deep",
+          "updated_at": "2026-06-28T02:45:47.947Z",
+          "started_at": "2026-06-28T02:45:47.947Z",
+          "status": "running"
+        },
+        "todo:11": {
+          "task_key": "todo:11",
+          "task_label": "11",
+          "task_title": "Implement terminal IO commands with testable input abstraction",
+          "session_id": "opencode:ses_0f3dd3b11ffe0FPJzMpoMwIWcT",
+          "agent": "Sisyphus-Junior",
+          "category": "deep",
+          "updated_at": "2026-06-28T03:16:45.442Z",
+          "started_at": "2026-06-28T03:16:45.442Z",
+          "status": "running"
+        },
+        "todo:12": {
+          "task_key": "todo:12",
+          "task_label": "12",
+          "task_title": "Implement user/system/time commands",
+          "session_id": "opencode:ses_0f3ae8da0ffeRA7HfITWCyyvI5",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "started_at": "2026-06-28T03:38:08.353Z",
+          "status": "running",
+          "updated_at": "2026-06-28T03:58:19.665Z"
+        },
+        "todo:13": {
+          "task_key": "todo:13",
+          "task_label": "13",
+          "task_title": "Add golden fixture scripts and end-to-end CLI snapshots",
+          "session_id": "opencode:ses_0f33e4efaffeDlQSz2ipNaeJOA",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-06-28T05:47:56.211Z",
+          "started_at": "2026-06-28T05:47:56.211Z",
+          "status": "running"
+        },
+        "final-wave:f1": {
+          "task_key": "final-wave:f1",
+          "task_label": "F1",
+          "task_title": "Plan compliance audit: reviewer checks every implemented command against `dyyl-api-reference.md` and `.omo/drafts/dyyl-interpreter.md` decisions, especially mcm exclusion and sentinel behavior.",
+          "session_id": "opencode:ses_0f338a105ffeRJUPNnXZjSLzJQ",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-06-28T05:53:21.892Z",
+          "started_at": "2026-06-28T05:53:21.892Z",
+          "status": "running"
+        }
+      },
+      "resumed_after_false_completion_at": "2026-06-28T00:00:00.000Z",
+      "ended_at": "2026-06-28T05:53:48.750Z",
+      "elapsed_ms": 74742125
+    }
+  },
+  "active_plan": "/mnt/Storage1_xe6x96xb0xe5x8axa0xe5x8dxb7/nas/lucky/dyyl/.omo/plans/dyyl-language-interpreter.md",
+  "started_at": "2026-06-27T09:08:06.625Z",
+  "status": "completed",
+  "updated_at": "2026-06-28T05:53:48.750Z",
+  "session_ids": [
+    "opencode:ses_0f7a9edffffeUJnAazQgLfHZxS",
+    "opencode:ses_0f7956eaaffemOUsFr6becfWNC",
+    "opencode:ses_0f6688526ffeLQvigOcsTx7Luw"
+  ],
+  "session_origins": {
+    "opencode:ses_0f7a9edffffeUJnAazQgLfHZxS": "direct",
+    "opencode:ses_0f7956eaaffemOUsFr6becfWNC": "direct",
+    "opencode:ses_0f6688526ffeLQvigOcsTx7Luw": "direct"
+  },
+  "plan_name": "dyyl-language-interpreter",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "`src/parser/helpers.rs` line 12: `s.split_whitespace().next().unwrap_or(s)`",
+      "session_id": "opencode:ses_0f37169ecffemqvLy4EO329wqG",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "started_at": "2026-06-27T09:54:51.803Z",
+      "status": "completed",
+      "updated_at": "2026-06-28T04:51:37.759Z",
+      "ended_at": "2026-06-28T04:51:37.758Z",
+      "elapsed_ms": 68205955
+    },
+    "todo:2": {
+      "task_key": "todo:2",
+      "task_label": "2",
+      "task_title": "Build parser lexer with comments, optional-quote strings, backslash escaping, literals, and no-continuation rules",
+      "session_id": "opencode:ses_0f7665c59ffemmjk7Cz1NLY7i5",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-06-27T11:05:04.159Z",
+      "started_at": "2026-06-27T11:05:04.159Z",
+      "status": "running"
+    },
+    "todo:4": {
+      "task_key": "todo:4",
+      "task_label": "4",
+      "task_title": "Implement value model, environment, sentinels, and debug diagnostics",
+      "session_id": "opencode:ses_0f66483e6ffeF7ndmgbrefLS1y",
+      "agent": "Sisyphus-Junior",
+      "started_at": "2026-06-27T15:20:00.917Z",
+      "status": "running",
+      "updated_at": "2026-06-27T16:04:17.975Z"
+    },
+    "todo:3": {
+      "task_key": "todo:3",
+      "task_label": "3",
+      "task_title": "Implement command grammar, greedy RHS, parentheses, and placeholder disambiguation",
+      "session_id": "opencode:ses_0f66483e6ffeF7ndmgbrefLS1y",
+      "agent": "Sisyphus-Junior",
+      "started_at": "2026-06-27T15:20:10.699Z",
+      "status": "running",
+      "updated_at": "2026-06-27T15:30:13.639Z"
+    },
+    "todo:5": {
+      "task_key": "todo:5",
+      "task_label": "5",
+      "task_title": "Implement CAS/display numeric layer",
+      "session_id": "opencode:ses_0f628f3c1ffexvIyBt1ikqQjHv",
+      "agent": "Sisyphus-Junior",
+      "started_at": "2026-06-27T16:38:39.473Z",
+      "status": "running",
+      "updated_at": "2026-06-27T17:08:33.339Z"
+    },
+    "todo:6": {
+      "task_key": "todo:6",
+      "task_label": "6",
+      "task_title": "Implement core runtime commands: create, set, logic, and control flow",
+      "session_id": "opencode:ses_0f448e14cffeVhYA15wflMTcNN",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "started_at": "2026-06-27T17:51:00.928Z",
+      "status": "running",
+      "updated_at": "2026-06-28T00:59:45.022Z"
+    },
+    "todo:7": {
+      "task_key": "todo:7",
+      "task_label": "7",
+      "task_title": "Implement CLI entry point and script runner",
+      "session_id": "opencode:ses_0f43e7b91ffeN0s5PnRrLBrXY6",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-06-28T01:05:56.493Z",
+      "started_at": "2026-06-28T01:05:56.493Z",
+      "status": "running"
+    },
+    "todo:8": {
+      "task_key": "todo:8",
+      "task_label": "8",
+      "task_title": "Implement string commands and regex hybrid engine",
+      "session_id": "opencode:ses_0f4397645ffemT9ZV1dPhytHP8",
+      "agent": "Sisyphus-Junior",
+      "started_at": "2026-06-28T01:32:13.841Z",
+      "status": "running",
+      "updated_at": "2026-06-28T01:43:29.153Z"
+    },
+    "todo:9": {
+      "task_key": "todo:9",
+      "task_label": "9",
+      "task_title": "Implement dict and list commands",
+      "session_id": "opencode:ses_0f4142edeffeBgAcp8sIrwF0wE",
+      "agent": "Sisyphus-Junior",
+      "started_at": "2026-06-28T02:16:15.018Z",
+      "status": "running",
+      "updated_at": "2026-06-28T02:23:52.943Z"
+    },
+    "todo:10": {
+      "task_key": "todo:10",
+      "task_label": "10",
+      "task_title": "Implement file and network commands with isolated tests",
+      "session_id": "opencode:ses_0f3f19624ffelg1H0FGNxVrK66",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-06-28T02:45:47.947Z",
+      "started_at": "2026-06-28T02:45:47.947Z",
+      "status": "running"
+    },
+    "todo:11": {
+      "task_key": "todo:11",
+      "task_label": "11",
+      "task_title": "Implement terminal IO commands with testable input abstraction",
+      "session_id": "opencode:ses_0f3dd3b11ffe0FPJzMpoMwIWcT",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-06-28T03:16:45.442Z",
+      "started_at": "2026-06-28T03:16:45.442Z",
+      "status": "running"
+    },
+    "todo:12": {
+      "task_key": "todo:12",
+      "task_label": "12",
+      "task_title": "Implement user/system/time commands",
+      "session_id": "opencode:ses_0f3ae8da0ffeRA7HfITWCyyvI5",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "started_at": "2026-06-28T03:38:08.353Z",
+      "status": "running",
+      "updated_at": "2026-06-28T03:58:19.665Z"
+    },
+    "todo:13": {
+      "task_key": "todo:13",
+      "task_label": "13",
+      "task_title": "Add golden fixture scripts and end-to-end CLI snapshots",
+      "session_id": "opencode:ses_0f33e4efaffeDlQSz2ipNaeJOA",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-06-28T05:47:56.211Z",
+      "started_at": "2026-06-28T05:47:56.211Z",
+      "status": "running"
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "Plan compliance audit: reviewer checks every implemented command against `dyyl-api-reference.md` and `.omo/drafts/dyyl-interpreter.md` decisions, especially mcm exclusion and sentinel behavior.",
+      "session_id": "opencode:ses_0f338a105ffeRJUPNnXZjSLzJQ",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-06-28T05:53:21.892Z",
+      "started_at": "2026-06-28T05:53:21.892Z",
+      "status": "running"
+    }
+  },
+  "agent": "atlas",
+  "resumed_after_false_completion_at": "2026-06-28T00:00:00.000Z",
+  "ended_at": "2026-06-28T05:53:48.750Z",
+  "elapsed_ms": 74742125
+}

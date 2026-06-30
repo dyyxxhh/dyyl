@@ -1,0 +1,56 @@
+Task 11 Evidence — terminal IO commands with testable input abstraction
+
+## Automated Test
+
+cargo test terminal_io_with_mock_input -- --nocapture
+→ PASS (1 test, 0 failed)
+
+Test covers: io.out with numeric/CAS value, io.changeline returns Empty, io.in reads mocked line, io.get reads mocked key, io.inpasswd reads mocked password, no-input sentinel returns Str("") for all three input commands.
+
+Additional tests:
+- terminal_io_no_input_returns_sentinel → PASS (empty mock provider, all 3 return Str(""))
+- terminal_io_changeline_returns_empty → PASS (double changeline)
+- terminal_io_out_single_arg → PASS (CAS fraction display)
+- terminal_io_no_input_debug_warns → PASS (debug mode, io.in no-input)
+
+## Manual Fixture
+
+cargo run -- --debug tests/fixtures/io-input-failures.dyyl < /dev/null
+
+STDOUT:
+before_in
+after_in
+after_key
+after_pwd
+
+STDERR:
+line 2: io.in — no input available
+line 4: io.get — no input available
+line 6: io.inpasswd — no input available
+
+All three IO input commands correctly return Str("") sentinel when stdin is at EOF.
+Debug warnings include line numbers and command names.
+
+## Full Suite
+
+cargo test → 402 tests PASS (0 failed)
+cargo fmt --check → PASS
+cargo check → 0 warnings
+All src/**/*.rs and tests/**/*.rs ≤250 pure LOC
+No allow(), TODO, FIXME, HACK, or xxx markers in src/ or tests/
+No unreachable!, panic!, unwrap(), unwrap_or, expect() in Task 11 production modules (io.rs, io_provider.rs)
+
+## Architecture
+
+IoProvider trait abstracts all terminal input operations:
+- read_line(prompt) → Result<String, IoError>
+- read_key() → Result<String, IoError>
+- read_password(prompt) → Result<String, IoError>
+
+Implementations:
+- StdIoProvider: reads from real stdin, returns NoInputAvailable on EOF
+- MockIoProvider: pre-loaded VecDeque responses for deterministic tests
+
+ExecContext carries Arc<dyn IoProvider> through the execution chain.
+run_script_with_provider(source, debug, provider) is the new entry point.
+run_script(source, debug) is preserved for backward compatibility (uses StdIoProvider).

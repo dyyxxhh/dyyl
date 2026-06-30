@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.36s
+     Running `target/debug/dyyl --debug tests/fixtures/string-invalid-regex.dyyl`
+line 4: str.match "abc", "("
+  reason: invalid regex pattern '('

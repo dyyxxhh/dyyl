@@ -1,0 +1,15 @@
+Task 11 Evidence (stderr capture) — terminal IO commands
+
+## Manual Fixture: io-input-failures.dyyl < /dev/null
+
+STDERR output:
+line 2: io.in — no input available
+line 4: io.get — no input available
+line 6: io.inpasswd — no input available
+
+## Test: terminal_io_no_input_debug_warns
+
+STDERR output (debug=true, io.in with empty provider):
+line 1: io.in — no input available
+
+Both confirm debug warning emission for no-input scenarios.

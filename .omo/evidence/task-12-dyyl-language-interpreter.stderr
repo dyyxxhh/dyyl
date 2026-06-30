@@ -1,0 +1,12 @@
+Task 12 — Stderr Evidence
+========================
+
+Command: cargo run -- --debug tests/fixtures/user-bash-failure.dyyl
+
+Stderr output:
+line 1: user.bash — command 'false' failed with status exit status: 1
+
+This confirms:
+- Debug warnings are emitted to stderr when user.bash fails
+- The warning includes line number (1), command name (user.bash), the failing command text ('false'), and the exit status
+- The stdout output is -1 (the failure sentinel)

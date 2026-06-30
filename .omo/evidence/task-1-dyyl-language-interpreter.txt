@@ -1,0 +1,136 @@
+=== dyyl Task 1 Evidence (REVISED) ===
+Date: 2026-06-27
+Task: Initialize Rust project scaffold and CAS backend spike
+
+=== Files ===
+- Cargo.toml          (project manifest with mathcore 0.3 dep, strict lints)
+- Cargo.lock          (resolved dependencies)
+- clippy.toml         (allow unwrap/panic/dbg in tests)
+- .gitignore          (/target/)
+- src/main.rs         (minimal binary scaffold)
+- src/lib.rs          (thin re-export of cas_backend module — 1 pure LOC)
+- src/cas_backend.rs  (CAS backend probe module — 140 pure LOC)
+- tests/cas_spike.rs  (integration tests — 60 pure LOC)
+
+=== Pure LOC ===
+src/lib.rs:         1 (under 250)
+src/cas_backend.rs: 140 (under 250)
+src/main.rs:          5 (under 250)
+tests/cas_spike.rs:  60 (under 250)
+
+=== git status --short (dyyl-local only) ===
+?? dyyl/
+
+=== cargo test cas_backend_spike -- --nocapture ===
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+=== dyyl CAS backend spike ===
+CAS_BACKEND=fallback-custom
+
+  [PASS] parse rational from string — parsed: Binary { op: Divide, left: Number(1.0), right: Number(3.0) }
+  [FAIL] exact rational arithmetic (1/3 + 1/6) — evaluate returned Expr: Number(0.5)
+  [FAIL] constant pi (π) — pi evaluates to Expr: Number(3.141592653589793)
+  [FAIL] sqrt symbolic — sqrt(2) evaluates to Expr: Number(1.4142135623730951)
+  [FAIL] trig special value sin(pi/6) == 1/2 — sin(pi/6) evaluates to Expr: Number(0.49999999999999994)
+  [PASS] f64 approximation — calculate("pi") = 3.141592653589793; expected ≈ 3.141592653589793; match = true
+  [PASS] expression tree inspection — parse returned Expr: Binary { op: Add, left: Number(2.0), right: Binary { op: Multiply, left: Number(3.0), right: Number(4.0) } }; preserves_binary_tree = true
+  [FAIL] constant e — e evaluates to Expr: Number(2.718281828459045)
+  [FAIL] constant tau (τ) — tau evaluates to Expr: Number(6.283185307179586)
+
+3 of 9 must-have checks passed.
+Selected backend: fallback-custom
+test cas_backend_spike ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+=== cargo test cas_backend_supports_required_dyyl_cases -- --nocapture ===
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.54s
+     Running unittests src/lib.rs (target/debug/deps/dyyl-ea8f9e7f9adcfcde)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/dyyl-34ec7ac73a5cd057)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cas_spike.rs (target/debug/deps/cas_spike-801523e76f6fe7c0)
+
+running 1 test
+=== dyyl CAS must-have check ===
+CAS_BACKEND=fallback-custom
+
+  [PASS] parse rational from string
+  [FAIL] exact rational arithmetic (1/3 + 1/6)
+  [FAIL] constant pi (π)
+  [FAIL] constant e
+  [FAIL] constant tau (τ)
+  [FAIL] sqrt symbolic
+  [FAIL] trig special value sin(pi/6) == 1/2
+  [PASS] f64 approximation
+  [PASS] expression tree inspection
+
+mathcore does NOT satisfy all dyyl CAS requirements.
+Rationale: Expr uses f64 for Number, not BigRational.
+Rationale: symbolic sqrt(2), sin(pi/6) -> f64, not exact symbolic.
+Action: use CAS_BACKEND=fallback-custom for task 5.
+Selected backend: fallback-custom
+test cas_backend_supports_required_dyyl_cases ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.01s
+
+
+=== cargo test (full suite) ===
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.14s
+     Running unittests src/lib.rs (target/debug/deps/dyyl-ea8f9e7f9adcfcde)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/dyyl-34ec7ac73a5cd057)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cas_spike.rs (target/debug/deps/cas_spike-801523e76f6fe7c0)
+
+running 2 tests
+test cas_backend_spike ... ok
+test cas_backend_supports_required_dyyl_cases ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests dyyl
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+=== mcm dependency check ===
+mcm references in Cargo.lock: 0
+0
+grep -r mcm dyyl/src/: no matches
+No /x/mcm dependency.
+
+=== cargo run (binary scaffold) ===
+
+=== cleanup ===
+No running processes, temp files, or QA assets left behind.
+../mcm dirty state is from unrelated task-16 work, not touched.

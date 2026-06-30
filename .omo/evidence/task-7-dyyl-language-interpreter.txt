@@ -1,0 +1,68 @@
+Task 7: CLI entry point and script runner verification
+=====================================================
+
+## Scenario 1: dyyl <filename> — arbitrary extension (.anything)
+
+Command: cargo run -- tests/fixtures/basic.anything
+Exit code: 0
+
+Stdout:
+42
+
+Notes: Script exercises create.num, set, io.out, math.add.
+Output `42` confirms the variable was created, set to 42, and printed.
+`math.add $x, 8` computed 50 internally but does not print to stdout (only io.out prints).
+Arbitrary extension .anything is accepted and executed correctly.
+
+## Scenario 2: dyyl --debug <filename> — runtime debug warnings
+
+Command: cargo run -- --debug tests/fixtures/errors-debug.dyyl
+Exit code: 0
+
+Stdout:
+-1
+-1
+
+Stderr:
+line 2: io.out $undefined_var
+  reason: undefined variable '$undefined_var'
+line 4: io.out dict.get(d, missing_key)
+  reason: dict.get — missing key
+
+Notes: Two runtime errors emit debug warnings to stderr with line number, command text, and reason.
+Both errors produce sentinel values (-1) on stdout.
+Host exit code is 0 — runtime errors are sentinel-driven, not host failures.
+
+## Scenario 3: dyyl <nonexistent> — missing file exits nonzero
+
+Command: cargo run -- nonexistent_script.dyyl
+Exit code: 1
+
+Stdout: (empty)
+
+Stderr:
+dyyl: cannot read 'nonexistent_script.dyyl': No such file or directory (os error 2)
+
+Notes: Missing script file causes host-level nonzero exit (1).
+
+## Scenario 4: dyyl (no args) — usage exits nonzero
+
+Command: cargo run
+Exit code: 1
+
+Stdout: (empty)
+
+Stderr:
+dyyl 0.1.0 — script interpreter
+Usage: dyyl [--debug] <filename>
+
+Notes: Missing filename argument causes host-level nonzero exit (1).
+
+## Summary
+
+| Scenario | Expected | Actual | PASS |
+|----------|----------|--------|------|
+| arbitrary extension (.anything) | execute, exit 0 | output "42", exit 0 | YES |
+| --debug with errors | stderr warnings, exit 0 | stderr warnings + sentinels, exit 0 | YES |
+| missing script | error + exit 1 | error msg, exit 1 | YES |
+| no args | usage + exit 1 | usage msg, exit 1 | YES |

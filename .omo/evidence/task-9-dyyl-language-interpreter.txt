@@ -1,0 +1,36 @@
+Task 9 Evidence — Implement dict and list commands (RETRY)
+==========================================================
+
+## Verification Results (RETRY — quality fix only)
+
+### 1. cargo test containers_all_dict_list_commands -- --nocapture
+PASS — 40-command ordered acceptance test covers all 20 dict/list commands.
+
+### 2. cargo run -- --debug tests/fixtures/container-missing-access.dyyl
+STDOUT: -1\n-1\n-1
+STDERR: 4 debug warnings (dict.get missing key, list.get OOB ×2, list.remove OOB)
+All three -1 outputs confirmed with correct debug diagnostics.
+
+### 3. cargo fmt --check && cargo check
+PASS — Zero warnings.
+
+### 4. cargo test
+PASS — 391 total (143 lib + 15 container + 8 container_list + 2 container_regression + 223 other).
+
+### 5. Pure LOC scan (src/**/*.rs and tests/**/*.rs)
+Largest src file: dict_handlers.rs at 207 LOC. All under 250.
+Largest test file: logic_control_flow_tests.rs at 220 LOC. All under 250.
+container_tests.rs split into 3 files: 175 + 180 + 24 LOC.
+
+### 6. Banned marker scan
+No allow(), TODO, FIXME, HACK, or xxx in src/ or tests/.
+
+### 7. Task 9 panic/unwrap scan
+No unreachable!, panic!(), unwrap(), unwrap_or(), or expect() in any Task 9 production file.
+
+## Files Modified (RETRY)
+- src/runtime/cmd/dict_handlers.rs — removed unwrap_or (replaced with single match)
+- tests/container_tests.rs — split into 3 files (was 367 LOC)
+- tests/container_list_tests.rs — new (list unit tests, 180 LOC)
+- tests/container_regression_tests.rs — new (str regression guards, 24 LOC)
+- .omo/evidence/task-9-dyyl-language-interpreter.txt — updated with truthful LOC

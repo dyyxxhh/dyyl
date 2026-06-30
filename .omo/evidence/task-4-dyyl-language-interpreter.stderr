@@ -1,0 +1,8 @@
+line 4: io.out $missing_var
+  reason: undefined variable '$missing_var'
+line 5: io.out dict.get(d, nonexistent)
+  reason: dict.get — missing key
+line 6: io.out list.get(l, 0)
+  reason: list.get — index 0 out of bounds (len 0)
+line 7: unknown.cmd
+  reason: unknown command 'unknown.cmd'

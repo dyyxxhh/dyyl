@@ -1,0 +1,33 @@
+Task 10 Evidence — file and network commands
+
+## Automated Test
+
+cargo test file_and_network_commands_local_https_only -- --nocapture
+→ PASS (1 test, 0 failed)
+
+Test covers: file.write overwrite, file.read, file.write overwrite, file.append, relative path rejection (write/read/append), net.get local HTTPS, net.download byte count, downloaded file verification, failed net.get sentinel, failed net.download sentinel.
+
+## Manual Fixture
+
+cargo run -- --debug tests/fixtures/file-net-failures.dyyl
+
+STDOUT: 4 blank lines (Str("") sentinels for: file.write relative, file.read relative, file.append relative, net.get failed)
+
+STDERR:
+  line 2: file.write relative.txt, test
+    reason: path must be absolute, got 'relative.txt'
+  line 3: file.read relative.txt
+    reason: path must be absolute, got 'relative.txt'
+  line 4: file.append relative.txt, test
+    reason: path must be absolute, got 'relative.txt'
+  line 6: net.get "https://localhost:1/nonexistent"
+    reason: failed to fetch 'https://localhost:1/nonexistent': Connection refused (os error 111)
+
+## Full Suite
+
+cargo test → 392 tests PASS (0 failed)
+cargo fmt --check → PASS
+cargo check → 0 warnings
+All src/**/*.rs and tests/**/*.rs ≤250 pure LOC (max: src/lexer/mod.rs = 236)
+No allow(), TODO, FIXME, HACK, or xxx markers in src/ or tests/
+No unreachable!, panic!, unwrap(), unwrap_or, expect() in Task 10 production modules (file.rs, net.rs)

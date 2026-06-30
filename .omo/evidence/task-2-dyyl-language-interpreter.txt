@@ -1,0 +1,44 @@
+=== dyyl Task 2 Evidence ===
+Date: 2026-06-27
+Task: Build parser lexer with comments, optional-quote strings, backslash escaping, literals, and no-continuation rules
+
+=== Files Changed/Created ===
+- src/lexer/mod.rs      (lexer public API + internal helpers — 208 pure LOC)
+- src/lexer/types.rs    (Token, LexError types + Display impls — 40 pure LOC)
+- src/lib.rs            (added pub mod lexer)
+- src/main.rs           (added --debug CLI mode)
+- tests/lexer_tests.rs  (26 lexer integration tests — 236 pure LOC)
+- tests/fixtures/parser-quoting-and-escape.dyyl
+- tests/fixtures/parser-continuation-error.dyyl
+- .omo/evidence/task-2-dyyl-language-interpreter.txt
+- .omo/evidence/task-2-dyyl-language-interpreter.stderr
+
+=== Pure LOC ===
+src/lib.rs:               2 (under 250)
+src/main.rs:             45 (under 250)
+src/cas_backend.rs:     178 (under 250)
+src/lexer/types.rs:      40 (under 250)
+src/lexer/mod.rs:       208 (under 250)
+tests/cas_spike.rs:      60 (under 250)
+tests/lexer_tests.rs:   236 (under 250)
+
+=== cargo fmt --check ===
+PASS (no diff)
+
+=== cargo test (full suite) ===
+28 passed; 0 failed; 0 ignored
+
+=== cargo test parser_lexes_comments_strings_literals_quoting_escaping ===
+PASS
+
+=== Fixture: parser-continuation-error.dyyl (--debug) ===
+-1
+=== Fixture: parser-quoting-and-escape.dyyl ===
+Command(io.out) Param("hello world")
+Command(io.out) Param("hello world")
+Command(io.out) Param("hello, world")
+Command(io.out) Param("line one\nline two")
+Command(io.out) Param("hello")
+Command(set) Param("$i") Num(42) Fraction(1/3)
+Command(io.out) Sqrt(√2)
+Command(io.out) Pi(π)

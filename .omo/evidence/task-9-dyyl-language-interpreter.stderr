@@ -1,0 +1,10 @@
+Task 9 Debug Stderr Evidence — container-missing-access.dyyl
+============================================================
+line 3: io.out dict.get(d, missing_key)
+  reason: dict.get — missing key
+line 6: io.out list.get(l, 5)
+  reason: list.get — index 5 out of bounds (len 1)
+line 7: io.out list.get(l, -1)
+  reason: list.get — index -1 out of bounds (len 1)
+line 8: list.remove l, 99
+  reason: list.remove — index 99 out of bounds (len 1)

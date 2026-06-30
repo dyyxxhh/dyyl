@@ -1,0 +1,2 @@
+line 1: math.add math.add 1, 2, 3
+line 1: ambiguous left-nested call in 'math.add' — param starts with 'math.add' but has no parentheses; use _ or () to disambiguate

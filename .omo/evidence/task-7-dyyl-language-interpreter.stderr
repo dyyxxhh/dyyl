@@ -1,0 +1,11 @@
+Task 7: CLI debug stderr capture
+================================
+
+## Scenario 2: --debug with errors-debug.dyyl
+
+Command: cargo run -- --debug tests/fixtures/errors-debug.dyyl
+
+line 2: io.out $undefined_var
+  reason: undefined variable '$undefined_var'
+line 4: io.out dict.get(d, missing_key)
+  reason: dict.get — missing key

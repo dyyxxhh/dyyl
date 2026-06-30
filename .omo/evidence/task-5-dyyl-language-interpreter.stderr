@@ -1,0 +1,16 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.59s
+     Running `target/debug/dyyl --debug tests/fixtures/math-failures.dyyl`
+line 6: io.out math.div 5, 0
+  reason: division by zero
+line 9: io.out math.surplus 5, 0
+  reason: division by zero
+line 12: io.out math.strike 5, 0
+  reason: division by zero
+line 15: io.out math.add "hello", 1
+  reason: invalid char offset
+line 18: io.out math.add 1/2, "world"
+  reason: mixed types
+line 21: io.out math.sub "b", 1/2
+  reason: mixed types
+line 25: io.out math.add "\u{10FFFF}", 1
+  reason: invalid char offset

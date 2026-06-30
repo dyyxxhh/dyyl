@@ -1,0 +1,167 @@
+Final Verification Wave - F3: Real Manual QA
+=============================================
+
+All fixture runs captured below.
+
+--- arithmetic.dyyl ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.85s
+     Running `target/debug/dyyl tests/fixtures/arithmetic.dyyl`
+3
+2
+6
+3
+8
+2
+0
+1
+⅓
+1⅔
+√2
+π
+3.14159265358979
+b
+
+--- nested-control.dyyl ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.97s
+     Running `target/debug/dyyl tests/fixtures/nested-control.dyyl`
+nested_if
+while_iter
+while_iter
+while_iter
+for_iter
+for_iter
+nested_for
+nested_for
+
+--- containers.dyyl ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.83s
+     Running `target/debug/dyyl tests/fixtures/containers.dyyl`
+alice
+30
+2
+1
+0
+3
+30
+10
+20
+30
+
+--- io-string.dyyl ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.87s
+     Running `target/debug/dyyl tests/fixtures/io-string.dyyl`
+hello world
+42
+5
+HELLO
+hello
+cba
+1
+0
+
+--- errors-debug.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.92s
+     Running `target/debug/dyyl --debug tests/fixtures/errors-debug.dyyl`
+line 2: io.out $undefined_var
+  reason: undefined variable '$undefined_var'
+-1
+line 4: io.out dict.get(d, missing_key)
+  reason: dict.get — missing key
+-1
+
+--- mcm-unknown.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.63s
+     Running `target/debug/dyyl --debug tests/fixtures/mcm-unknown.dyyl`
+line 5: mcm.game.install 1.20.4, MyVersion
+  reason: unknown command 'mcm.game.install'
+-1
+
+--- user-bash-failure.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.89s
+     Running `target/debug/dyyl --debug tests/fixtures/user-bash-failure.dyyl`
+line 1: user.bash — command 'false' failed with status exit status: 1
+-1
+
+--- math-failures.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.17s
+     Running `target/debug/dyyl --debug tests/fixtures/math-failures.dyyl`
+line 6: io.out math.div 5, 0
+  reason: division by zero
+-1
+line 9: io.out math.surplus 5, 0
+  reason: division by zero
+-1
+line 12: io.out math.strike 5, 0
+  reason: division by zero
+-1
+line 15: io.out math.add "hello", 1
+  reason: invalid char offset
+
+line 18: io.out math.add 1/2, "world"
+  reason: mixed types
+-1
+line 21: io.out math.sub "b", 1/2
+  reason: mixed types
+-1
+line 25: io.out math.add "\u{10FFFF}", 1
+  reason: invalid char offset
+
+
+--- runtime-sentinels.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.00s
+     Running `target/debug/dyyl --debug tests/fixtures/runtime-sentinels.dyyl`
+line 4: io.out $missing_var
+  reason: undefined variable '$missing_var'
+-1
+line 5: io.out dict.get(d, nonexistent)
+  reason: dict.get — missing key
+-1
+line 6: io.out list.get(l, 0)
+  reason: list.get — index 0 out of bounds (len 0)
+-1
+line 7: unknown.cmd
+  reason: unknown command 'unknown.cmd'
+-1
+
+--- container-missing-access.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.54s
+     Running `target/debug/dyyl --debug tests/fixtures/container-missing-access.dyyl`
+line 3: io.out dict.get(d, missing_key)
+  reason: dict.get — missing key
+-1
+line 6: io.out list.get(l, 5)
+  reason: list.get — index 5 out of bounds (len 1)
+-1
+line 7: io.out list.get(l, -1)
+  reason: list.get — index -1 out of bounds (len 1)
+-1
+line 8: list.remove l, 99
+  reason: list.remove — index 99 out of bounds (len 1)
+
+--- control-underdeclared-block.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.67s
+     Running `target/debug/dyyl --debug tests/fixtures/control-underdeclared-block.dyyl`
+0
+line 10:   logic.if $x, 3
+  reason: block span underdeclared — declared 3 lines, only 0 available
+done
+
+--- string-invalid-regex.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.63s
+     Running `target/debug/dyyl --debug tests/fixtures/string-invalid-regex.dyyl`
+line 4: str.match "abc", "("
+  reason: invalid regex pattern '('
+
+--- parser-continuation-error.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.93s
+     Running `target/debug/dyyl --debug tests/fixtures/parser-continuation-error.dyyl`
+-1
+line 1: io.out "a" \
+line 1: continuation not supported
+
+--- parser-left-ambiguity-error.dyyl (debug mode) ---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.75s
+     Running `target/debug/dyyl --debug tests/fixtures/parser-left-ambiguity-error.dyyl`
+-1
+line 1: math.add math.add 1, 2, 3
+line 1: ambiguous left-nested call in 'math.add' — param starts with 'math.add' but has no parentheses; use _ or () to disambiguate

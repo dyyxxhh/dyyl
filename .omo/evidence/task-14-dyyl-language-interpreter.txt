@@ -1,0 +1,21 @@
+Task 14: Harden quality gates, docs alignment, and final cleanup
+================================================================
+
+Quality gates:
+- cargo fmt --check: PASS
+- cargo check: PASS
+- cargo test: PASS (all tests)
+- LOC scan: no modules >250 pure LOC
+- Marker scan: no allow/TODO/FIXME/HACK/xxx
+- Panic scan: only src/parser/tests.rs (test code, acceptable)
+- mcm handler scan: no mcm.* handlers in src/
+
+CLI fixture runs:
+- arithmetic.dyyl: 3,2,6,3,8,2,0,1,⅓,1⅔,√2,π,3.14159265358979,b
+- nested-control.dyyl: nested_if,while_iter×3,for_iter×2,nested_for×2
+- containers.dyyl: alice,30,2,1,0,3,30,10,20,30
+- io-string.dyyl: hello world,42,5,HELLO,hello,cba,1,0
+- errors-debug.dyyl (debug): line 2 undefined var, line 4 missing dict key
+- mcm-unknown.dyyl (debug): line 5 unknown command mcm.game.install, stdout -1
+
+All gates pass. No mcm handler. Docs alignment confirmed.

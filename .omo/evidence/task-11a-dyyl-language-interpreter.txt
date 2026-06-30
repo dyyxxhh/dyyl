@@ -1,0 +1,43 @@
+Task 11a Evidence — Bare nested zero-arity input commands in greedy arguments
+==============================================================================
+
+Root cause found and fixed:
+  The lexer stripped quotes from "io.in" → Token::Param("io.in").
+  The greedy RHS parser joined tokens to a string, re-lexed, and
+  re-classified "io.in" as a nested command call (Expr::Call(io.in())).
+  This caused `io.out "io.in"` to call io.in instead of outputting
+  the literal string "io.in".
+
+Fix: Added Token::QuotedParam(String) variant to distinguish quoted from
+bare params. Single quoted params in greedy position bypass the re-lex
+round-trip and become literal Expr::Param directly.
+
+Regression tests (3 new, all PASS):
+  bare_zero_arity_io_in_in_greedy_rhs_evaluates_as_command — io.out io.in with mocked input returns injected value
+  bare_zero_arity_io_in_via_set_then_io_out_evaluates — set a,io.in + io.out $a returns injected value
+  quoted_io_in_is_literal_string_not_command — io.out "io.in" returns literal "io.in"
+
+Manual QA:
+  printf 'hello-user\n' | cargo run -- /home/usr/a.dyyl → stdout: hello-user
+  printf 'hello-user\n' | cargo run -- /home/usr/b.dyyl → stdout: hello-user
+
+Cargo gates:
+  cargo fmt --check → PASS
+  cargo check → PASS (0 warnings)
+  cargo test → 406/406 PASS
+
+Side-effect fix: The old greedy RHS join→trim→re-lex pipeline was silently
+stripping leading/trailing whitespace from quoted strings. The QuotedParam
+fix preserves quoted content exactly, correcting str.trim.left/trim.right
+test expectations that relied on this accidental behavior.
+
+Changed files:
+  src/lexer/types.rs — +QuotedParam variant + Display arm
+  src/lexer/mod.rs — classify_param produces QuotedParam for quoted strings
+  src/parser/helpers.rs — token_raw_string + token_to_expr_literal handle QuotedParam
+  src/parser/mod.rs — parse_non_greedy_token + greedy path handle QuotedParam
+  tests/terminal_io_tests.rs — 3 new regression tests
+  tests/lexer_escape_tests.rs — 4 assertions updated (Param → QuotedParam)
+  tests/lexer_tests.rs — 6 assertions updated (Param → QuotedParam)
+  tests/string_comprehensive_tests.rs — 2 expectations corrected (trim.left/right)
+  tests/string_tests.rs — 1 expectation corrected (trim.left)

@@ -1,0 +1,5 @@
+    Blocking waiting for file lock on package cache
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.75s
+     Running `target/debug/dyyl --debug tests/fixtures/control-underdeclared-block.dyyl`
+line 10:   logic.if $x, 3
+  reason: block span underdeclared — declared 3 lines, only 0 available

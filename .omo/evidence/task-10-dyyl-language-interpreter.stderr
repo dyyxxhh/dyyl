@@ -1,0 +1,12 @@
+Task 10 Evidence — stderr capture from manual fixture
+
+$ cargo run -- --debug tests/fixtures/file-net-failures.dyyl 2>&1
+
+line 2: file.write relative.txt, test
+  reason: path must be absolute, got 'relative.txt'
+line 3: file.read relative.txt
+  reason: path must be absolute, got 'relative.txt'
+line 4: file.append relative.txt, test
+  reason: path must be absolute, got 'relative.txt'
+line 6: net.get "https://localhost:1/nonexistent"
+  reason: failed to fetch 'https://localhost:1/nonexistent': https://localhost:1/nonexistent: Connection Failed: Connect error: Connection refused (os error 111)

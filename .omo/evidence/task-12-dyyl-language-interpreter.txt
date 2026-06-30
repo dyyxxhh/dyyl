@@ -1,0 +1,5 @@
+   Compiling dyyl v0.1.0 (/mnt/Storage1_xe6x96xb0xe5x8axa0xe5x8dxb7/nas/lucky/dyyl)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 26.25s
+     Running `target/debug/dyyl --debug tests/fixtures/user-bash-failure.dyyl`
+line 1: user.bash — command 'false' failed with status exit status: 1
+-1
