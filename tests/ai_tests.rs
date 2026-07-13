@@ -154,3 +154,61 @@ fn retry_on_rate_limit_429() {
     assert!(result.is_ok());
     assert_eq!(attempts.load(Ordering::SeqCst), 3);
 }
+
+// ── Task 5: OpenAI Chat Completions provider tests ──────────────────
+
+use dyyl::ai::provider_openai_chat::OpenaiChatProvider;
+use dyyl::ai::AiProvider;
+
+#[test]
+fn openai_chat_builds_correct_request_body() {
+    let provider = OpenaiChatProvider::new(
+        "sk-test".to_string(),
+        "gpt-4o-mini".to_string(),
+        String::new(),
+    );
+    let req = provider.build_request("You are helpful", "What is 2+2?");
+    assert_eq!(req.method, "POST");
+    assert!(req.url.ends_with("/chat/completions"));
+    assert!(req.headers.iter().any(|(k, v)| k == "Authorization" && v == "Bearer sk-test"));
+    let body: serde_json::Value = serde_json::from_str(&req.body).expect("valid json");
+    assert_eq!(body["model"], "gpt-4o-mini");
+    assert_eq!(body["messages"][0]["role"], "system");
+    assert_eq!(body["messages"][0]["content"], "You are helpful");
+    assert_eq!(body["messages"][1]["role"], "user");
+    assert_eq!(body["messages"][1]["content"], "What is 2+2?");
+}
+
+#[test]
+fn openai_chat_parses_response() {
+    let provider = OpenaiChatProvider::new(
+        "sk-test".to_string(),
+        "gpt-4o-mini".to_string(),
+        String::new(),
+    );
+    let resp_body = r#"{"choices":[{"message":{"content":"4"}}]}"#;
+    let result = provider.parse_response(resp_body);
+    assert_eq!(result, Ok("4".to_string()));
+}
+
+#[test]
+fn openai_chat_default_base_url() {
+    let provider = OpenaiChatProvider::new(
+        "sk-test".to_string(),
+        "gpt-4o-mini".to_string(),
+        String::new(),
+    );
+    let req = provider.build_request("sys", "usr");
+    assert_eq!(req.url, "https://api.openai.com/v1/chat/completions");
+}
+
+#[test]
+fn openai_chat_custom_base_url() {
+    let provider = OpenaiChatProvider::new(
+        "sk-test".to_string(),
+        "gpt-4o-mini".to_string(),
+        "http://localhost:8080".to_string(),
+    );
+    let req = provider.build_request("sys", "usr");
+    assert_eq!(req.url, "http://localhost:8080/chat/completions");
+}

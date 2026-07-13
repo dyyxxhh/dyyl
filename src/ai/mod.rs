@@ -11,7 +11,7 @@ use crate::credentials::AiCredentials;
 pub use crate::credentials::AiProviderKind;
 
 /// AI 错误类型。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AiError {
     pub kind: AiErrorKind,
     pub message: String,
