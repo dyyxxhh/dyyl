@@ -212,3 +212,33 @@ fn openai_chat_custom_base_url() {
     let req = provider.build_request("sys", "usr");
     assert_eq!(req.url, "http://localhost:8080/chat/completions");
 }
+
+// ── Task 6: OpenAI Responses API provider tests ─────────────────────
+
+use dyyl::ai::provider_openai_response::OpenaiResponseProvider;
+
+#[test]
+fn openai_response_builds_correct_request_body() {
+    let provider = OpenaiResponseProvider::new(
+        "sk-test".to_string(),
+        "gpt-4o".to_string(),
+        String::new(),
+    );
+    let req = provider.build_request("Be concise", "Hi");
+    assert!(req.url.ends_with("/responses"));
+    let body: serde_json::Value = serde_json::from_str(&req.body).expect("json");
+    assert_eq!(body["model"], "gpt-4o");
+    assert_eq!(body["instructions"], "Be concise");
+    assert_eq!(body["input"], "Hi");
+}
+
+#[test]
+fn openai_response_parses_output_text() {
+    let provider = OpenaiResponseProvider::new(
+        "sk-test".to_string(),
+        "gpt-4o".to_string(),
+        String::new(),
+    );
+    let body = r#"{"output":[{"content":[{"type":"output_text","text":"Hello"}]}]}"#;
+    assert_eq!(provider.parse_response(body), Ok("Hello".to_string()));
+}
