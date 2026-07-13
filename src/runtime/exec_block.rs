@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::i18n;
@@ -19,10 +20,19 @@ pub(super) fn exec_block_cmd(
     end: usize,
     debug: bool,
     io_provider: &Arc<dyn IoProvider>,
+    open_blocks: &HashMap<usize, usize>,
 ) -> usize {
     let cmd_name = &cmd.call.command;
     let body_lines = match cmd.call.args.get(1) {
         Some(Expr::Num(n)) if *n >= 0 => *n as usize,
+        Some(Expr::Empty) => {
+            // 开放块：行数参数为 `_`，查预扫描结果获取对应 logic.end 索引。
+            // 等价行数 = end_idx - i - 1（即 if/while/for 与 logic.end 之间的体行数）。
+            match open_blocks.get(&i) {
+                Some(end_idx) => end_idx.saturating_sub(i + 1),
+                None => 0,
+            }
+        }
         _ => 0,
     };
     let available = end.saturating_sub(i + 1);

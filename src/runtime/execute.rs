@@ -202,6 +202,7 @@ fn exec_commands_range(
 ) -> usize {
     let total = commands.len();
     let end = total.min(start + count);
+    let open_blocks = scan_open_blocks(commands);
     let mut i = start;
     let mut prev_if_was_false = false;
 
@@ -217,6 +218,7 @@ fn exec_commands_range(
             end,
             debug,
             io_provider,
+            &open_blocks,
         );
         i += consumed;
     }
@@ -234,6 +236,7 @@ fn exec_one_command(
     end: usize,
     debug: bool,
     io_provider: &Arc<dyn IoProvider>,
+    open_blocks: &HashMap<usize, usize>,
 ) -> usize {
     match cmd.call.command.as_str() {
         "logic.if" | "logic.else" | "logic.while" | "logic.for" => exec_block::exec_block_cmd(
@@ -246,7 +249,22 @@ fn exec_one_command(
             end,
             debug,
             io_provider,
+            open_blocks,
         ),
+        "logic.end" => {
+            // 开放块终止符：若当前行是某个开放块的匹配 end，返回 1；
+            // 否则栈空哨兵返回 0（debug 时给出警告）。
+            let is_matched = open_blocks.values().any(|&end_idx| end_idx == i);
+            if !is_matched && debug {
+                eprintln!(
+                    "line {}: {}",
+                    cmd.line,
+                    crate::i18n::t(env.lang(), "logic.end_without_open", &[])
+                );
+            }
+            values.push(Value::Num(if is_matched { 1 } else { 0 }));
+            1
+        }
         _ => {
             let ctx = ExecContext::from_command(cmd, debug, Arc::clone(io_provider), env.lang());
             let result = dispatch_call(&cmd.call, env, &ctx);
@@ -288,6 +306,7 @@ fn exec_commands_range_with_error(
 ) -> usize {
     let total = commands.len();
     let end = total.min(start + count);
+    let open_blocks = scan_open_blocks(commands);
     let mut i = start;
     let mut prev_if_was_false = false;
 
@@ -304,6 +323,7 @@ fn exec_commands_range_with_error(
             debug,
             io_provider,
             error,
+            &open_blocks,
         );
         i += consumed;
     }
@@ -322,6 +342,7 @@ fn exec_one_command_with_error(
     debug: bool,
     io_provider: &Arc<dyn IoProvider>,
     error: &mut String,
+    open_blocks: &HashMap<usize, usize>,
 ) -> usize {
     match cmd.call.command.as_str() {
         "logic.if" | "logic.else" | "logic.while" | "logic.for" => exec_block::exec_block_cmd(
@@ -334,7 +355,22 @@ fn exec_one_command_with_error(
             end,
             debug,
             io_provider,
+            open_blocks,
         ),
+        "logic.end" => {
+            // 开放块终止符：若当前行是某个开放块的匹配 end，返回 1；
+            // 否则栈空哨兵返回 0（debug 时给出警告）。
+            let is_matched = open_blocks.values().any(|&end_idx| end_idx == i);
+            if !is_matched && debug {
+                eprintln!(
+                    "line {}: {}",
+                    cmd.line,
+                    crate::i18n::t(env.lang(), "logic.end_without_open", &[])
+                );
+            }
+            values.push(Value::Num(if is_matched { 1 } else { 0 }));
+            1
+        }
         _ => {
             let ctx = ExecContext::from_command(cmd, debug, Arc::clone(io_provider), env.lang());
             let result = dispatch_call(&cmd.call, env, &ctx);
