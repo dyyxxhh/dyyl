@@ -10,9 +10,7 @@ use crate::i18n;
 use crate::parser::types::Call;
 use crate::runtime::env::Env;
 use crate::runtime::error::RuntimeError;
-use crate::runtime::host_provider::{
-    McmArg, McmCommand, McmResponse,
-};
+use crate::runtime::host_provider::{McmArg, McmCommand, McmResponse};
 use crate::runtime::value::Value;
 
 /// Handle a `mcm.*` command by forwarding it to the host provider.
@@ -23,16 +21,13 @@ pub(crate) fn handle_mcm_command(
     env: &mut Env,
     ctx: &ExecContext,
 ) -> Result<Value, RuntimeError> {
-    let provider = env
-        .host_provider()
-        .cloned()
-        .ok_or_else(|| {
-            RuntimeError::new(
-                ctx.line,
-                &call.command,
-                i18n::mcm_no_host_provider(ctx.lang.get()),
-            )
-        })?;
+    let provider = env.host_provider().cloned().ok_or_else(|| {
+        RuntimeError::new(
+            ctx.line,
+            &call.command,
+            i18n::mcm_no_host_provider(ctx.lang.get()),
+        )
+    })?;
 
     let mcm_args: Vec<McmArg> = call
         .args
@@ -77,11 +72,13 @@ fn mcm_response_to_value(
             None => Value::Empty,
         })
     } else {
-        Err(crate::runtime::host_provider::mcm_response_error_to_runtime(
-            resp,
-            ctx.line,
-            &ctx.command,
-        ))
+        Err(
+            crate::runtime::host_provider::mcm_response_error_to_runtime(
+                resp,
+                ctx.line,
+                &ctx.command,
+            ),
+        )
     }
 }
 

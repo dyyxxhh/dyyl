@@ -5,8 +5,11 @@ use std::path::PathBuf;
 fn plugin_dir_is_under_xdg_data() {
     let dir = store::plugin_dir();
     // Should end with dyyl/plugins
-    assert!(dir.ends_with("dyyl/plugins") || dir.ends_with("dyyl\\plugins"),
-        "plugin_dir was: {}", dir.display());
+    assert!(
+        dir.ends_with("dyyl/plugins") || dir.ends_with("dyyl\\plugins"),
+        "plugin_dir was: {}",
+        dir.display()
+    );
 }
 
 #[test]
@@ -21,8 +24,10 @@ fn lib_path_ends_with_platform_suffix() {
     let path = store::lib_path("migpt", "0.1.0");
     let s = path.to_string_lossy();
     // On linux .so, macos .dylib, windows .dll
-    assert!(s.ends_with(".so") || s.ends_with(".dylib") || s.ends_with(".dll"),
-        "lib_path was: {s}");
+    assert!(
+        s.ends_with(".so") || s.ends_with(".dylib") || s.ends_with(".dll"),
+        "lib_path was: {s}"
+    );
 }
 
 #[test]

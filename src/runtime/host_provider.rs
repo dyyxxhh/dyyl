@@ -156,7 +156,11 @@ pub fn host_error_to_runtime(err: &HostError, line: usize, command: &str) -> Run
 }
 
 /// Convert an `McmResponse` error into a `RuntimeError`.
-pub fn mcm_response_error_to_runtime(resp: &McmResponse, line: usize, command: &str) -> RuntimeError {
+pub fn mcm_response_error_to_runtime(
+    resp: &McmResponse,
+    line: usize,
+    command: &str,
+) -> RuntimeError {
     let reason = resp.error.as_ref().map_or_else(
         || "unknown host error".to_string(),
         |e| format!("[{}] {}", e.code, e.message),

@@ -47,7 +47,9 @@ fn main() {
                         lang_explicit = true;
                     } else {
                         eprintln!("dyyl: unknown language '{}'", val);
-                        eprintln!("Usage: dyyl [--debug] [--host-json] [--lang <en|zh>] <filename>");
+                        eprintln!(
+                            "Usage: dyyl [--debug] [--host-json] [--lang <en|zh>] <filename>"
+                        );
                         process::exit(1);
                     }
                 } else {

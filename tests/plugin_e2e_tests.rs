@@ -33,9 +33,7 @@ fn load_and_call_greet() {
 
     // Call greet.
     let args = r#"[{"type":"str","value":"World"}]"#;
-    let result = loader
-        .handle_command("greet", args)
-        .expect("greet failed");
+    let result = loader.handle_command("greet", args).expect("greet failed");
     assert!(result.contains("Hello, World!"));
 }
 

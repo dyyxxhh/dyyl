@@ -15,7 +15,9 @@ pub mod value;
 
 pub use self::env::Env;
 pub use self::error::{debug_diagnostic, error_to_sentinel, RuntimeError};
-pub use self::execute::{run_script, run_script_with_provider, ScriptOutput, ScriptOutputWithError};
+pub use self::execute::{
+    run_script, run_script_with_provider, ScriptOutput, ScriptOutputWithError,
+};
 pub use self::host_provider::{
     GameChooseScope, HostError, HostProvider, McmArg, McmCommand, McmResponse, MockHostProvider,
     StdioHostConnection,

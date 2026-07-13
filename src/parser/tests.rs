@@ -86,8 +86,8 @@ fn disambiguate_with_parens() {
 
 #[test]
 fn left_nested_call_resolves_by_arity() {
-    let parsed = parse_one("math.add math.add 1, 2, 3")
-        .expect("left-nested should resolve by arity");
+    let parsed =
+        parse_one("math.add math.add 1, 2, 3").expect("left-nested should resolve by arity");
     assert_eq!(parsed.call.command, "math.add");
     assert_eq!(parsed.call.args.len(), 2);
     match &parsed.call.args[0] {

@@ -52,19 +52,11 @@ pub fn load_config() -> Result<DyylConfig, String> {
         return Ok(DyylConfig::default());
     }
 
-    let content = fs::read_to_string(&path).map_err(|e| {
-        format!(
-            "failed to read config at `{}`: {e}",
-            path.display()
-        )
-    })?;
+    let content = fs::read_to_string(&path)
+        .map_err(|e| format!("failed to read config at `{}`: {e}", path.display()))?;
 
-    toml::from_str(&content).map_err(|e| {
-        format!(
-            "failed to parse config at `{}`: {e}",
-            path.display()
-        )
-    })
+    toml::from_str(&content)
+        .map_err(|e| format!("failed to parse config at `{}`: {e}", path.display()))
 }
 
 /// Persist the configuration to disk.
@@ -83,15 +75,11 @@ pub fn save_config(config: &DyylConfig) -> Result<(), String> {
         })?;
     }
 
-    let content = toml::to_string_pretty(config)
-        .map_err(|e| format!("failed to serialize config: {e}"))?;
+    let content =
+        toml::to_string_pretty(config).map_err(|e| format!("failed to serialize config: {e}"))?;
 
-    fs::write(&path, content).map_err(|e| {
-        format!(
-            "failed to write config to `{}`: {e}",
-            path.display()
-        )
-    })
+    fs::write(&path, content)
+        .map_err(|e| format!("failed to write config to `{}`: {e}", path.display()))
 }
 
 #[cfg(test)]

@@ -51,7 +51,15 @@ pub fn run_script_with_lang(source: &str, debug: bool, lang: crate::i18n::Lang) 
     env.set_lang(lang);
     let mut values = Vec::new();
     let provider: Arc<dyn IoProvider> = Arc::new(StdIoProvider);
-    exec_commands_range(&commands, 0, commands.len(), &mut env, &mut values, debug, &provider);
+    exec_commands_range(
+        &commands,
+        0,
+        commands.len(),
+        &mut env,
+        &mut values,
+        debug,
+        &provider,
+    );
     ScriptOutput { values }
 }
 

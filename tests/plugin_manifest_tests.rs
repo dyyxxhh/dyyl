@@ -1,4 +1,4 @@
-use dyyl::runtime::plugin::manifest::{RemoteManifest, LocalPluginToml};
+use dyyl::runtime::plugin::manifest::{LocalPluginToml, RemoteManifest};
 
 #[test]
 fn parse_remote_manifest() {

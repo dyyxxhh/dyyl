@@ -145,8 +145,7 @@ fn parse_call_from_tokens(
                         let remaining_after_current = &param_tokens[i + 1..];
                         if remaining_after_current.len() >= params_needed {
                             // Also ensure the outer command still gets its greedy param
-                            let tokens_left =
-                                remaining_after_current.len() - params_needed;
+                            let tokens_left = remaining_after_current.len() - params_needed;
                             let outer_has_greedy = non_greedy_count < arity.unwrap_or(0);
                             if !outer_has_greedy || tokens_left >= 1 {
                                 // Build inner tokens for the nested call
@@ -155,31 +154,27 @@ fn parse_call_from_tokens(
                                 if has_first_param {
                                     // Lex the first param to get correct token type
                                     let synthetic = format!("{first} {first_param}");
-                                    let lexed = lexer::lex_line(&synthetic, line)
-                                        .map_err(|e| ParseError {
+                                    let lexed = lexer::lex_line(&synthetic, line).map_err(|e| {
+                                        ParseError {
                                             line,
                                             text: text.to_string(),
                                             message: format!(
                                                 "parse error in nested call: {}",
                                                 e.message
                                             ),
-                                        })?;
+                                        }
+                                    })?;
                                     // Skip the command token (index 0), take the param
                                     if lexed.len() > 1 {
                                         inner_tokens.push(lexed[1].clone());
                                     }
                                 }
-                                for t in remaining_after_current.iter().take(params_needed)
-                                {
+                                for t in remaining_after_current.iter().take(params_needed) {
                                     inner_tokens.push(t.clone());
                                 }
 
-                                let call = parse_call_from_tokens(
-                                    first,
-                                    &inner_tokens[1..],
-                                    line,
-                                    text,
-                                )?;
+                                let call =
+                                    parse_call_from_tokens(first, &inner_tokens[1..], line, text)?;
                                 args.push(Expr::Call(call));
 
                                 // Skip consumed tokens
