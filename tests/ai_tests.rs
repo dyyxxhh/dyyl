@@ -242,3 +242,49 @@ fn openai_response_parses_output_text() {
     let body = r#"{"output":[{"content":[{"type":"output_text","text":"Hello"}]}]}"#;
     assert_eq!(provider.parse_response(body), Ok("Hello".to_string()));
 }
+
+// ── Task 7: Anthropic Messages API provider tests ──────────────────
+
+use dyyl::ai::provider_anthropic::AnthropicProvider;
+
+#[test]
+fn anthropic_builds_correct_request_body() {
+    let provider = AnthropicProvider::new(
+        "sk-ant".to_string(),
+        "claude-3-5-sonnet-20241022".to_string(),
+        String::new(),
+    );
+    let req = provider.build_request("You are helpful", "Hi");
+    assert_eq!(req.url, "https://api.anthropic.com/v1/messages");
+    assert!(req.headers.iter().any(|(k, v)| k == "x-api-key" && v == "sk-ant"));
+    assert!(req.headers.iter().any(|(k, v)| k == "anthropic-version" && v == "2023-06-01"));
+    let body: serde_json::Value = serde_json::from_str(&req.body).expect("json");
+    assert_eq!(body["model"], "claude-3-5-sonnet-20241022");
+    assert_eq!(body["max_tokens"], 4096);
+    assert_eq!(body["system"], "You are helpful");
+    assert_eq!(body["messages"][0]["role"], "user");
+    assert_eq!(body["messages"][0]["content"], "Hi");
+}
+
+#[test]
+fn anthropic_parses_content_text() {
+    let provider = AnthropicProvider::new(
+        "sk-ant".to_string(),
+        "claude-3-5-sonnet-20241022".to_string(),
+        String::new(),
+    );
+    let body = r#"{"content":[{"type":"text","text":"Hello"}]}"#;
+    assert_eq!(provider.parse_response(body), Ok("Hello".to_string()));
+}
+
+#[test]
+fn anthropic_omits_system_when_empty() {
+    let provider = AnthropicProvider::new(
+        "sk-ant".to_string(),
+        "claude".to_string(),
+        String::new(),
+    );
+    let req = provider.build_request("", "Hi");
+    let body: serde_json::Value = serde_json::from_str(&req.body).expect("json");
+    assert!(body.get("system").is_none() || body["system"].as_str() == Some(""));
+}
