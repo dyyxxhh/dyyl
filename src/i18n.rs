@@ -232,10 +232,7 @@ pub fn cli_usage(lang: Lang) -> &'static str {
 /// "dyyl: cannot read '{path}': {e}" / "dyyl: 无法读取 '{path}': {e}"
 #[must_use]
 pub fn cli_cannot_read(lang: Lang, path: &str, e: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("dyyl: cannot read '{path}': {e}"),
-        Lang::Zh => format!("dyyl: 无法读取 '{path}': {e}"),
-    }
+    t(lang, "cli.cannot_read", &[("path", path), ("e", &e.to_string())])
 }
 
 // ── Generic runtime error patterns ───────────────────────────────────
@@ -243,28 +240,27 @@ pub fn cli_cannot_read(lang: Lang, path: &str, e: &dyn std::fmt::Display) -> Str
 /// "unknown {family} command '{sub}'"
 #[must_use]
 pub fn unknown_command(lang: Lang, family: &str, sub: &str) -> String {
-    match lang {
-        Lang::En => format!("unknown {family} command '{sub}'"),
-        Lang::Zh => format!("未知{}命令 '{sub}'", zh_family(family)),
-    }
+    let family_zh = match lang {
+        Lang::En => family,
+        Lang::Zh => zh_family(family),
+    };
+    t(
+        lang,
+        "runtime.unknown_command",
+        &[("family", family_zh), ("sub", sub)],
+    )
 }
 
 /// "unknown command '{cmd}'" (top-level, no family prefix)
 #[must_use]
 pub fn unknown_top_command(lang: Lang, cmd: &str) -> String {
-    match lang {
-        Lang::En => format!("unknown command '{cmd}'"),
-        Lang::Zh => format!("未知命令 '{cmd}'"),
-    }
+    t(lang, "runtime.unknown_top_command", &[("cmd", cmd)])
 }
 
 /// "undefined variable '{name}'"
 #[must_use]
 pub fn undefined_variable(lang: Lang, name: &str) -> String {
-    match lang {
-        Lang::En => format!("undefined variable '{name}'"),
-        Lang::Zh => format!("未定义变量 '{name}'"),
-    }
+    t(lang, "runtime.undefined_variable", &[("name", name)])
 }
 
 /// "division by zero"
@@ -279,91 +275,89 @@ pub fn division_by_zero(lang: Lang) -> &'static str {
 /// "requires at least {n} arg(s)"
 #[must_use]
 pub fn requires_args(lang: Lang, n: usize) -> String {
-    match lang {
-        Lang::En => format!("requires at least {n} arg(s)"),
-        Lang::Zh => format!("至少需要 {n} 个参数"),
-    }
+    t(lang, "runtime.requires_args", &[("n", &n.to_string())])
 }
 
 /// "requires {n} arguments" (exact count)
 #[must_use]
 pub fn requires_n_args(lang: Lang, n: usize) -> String {
-    match lang {
-        Lang::En => format!("requires {n} arguments"),
-        Lang::Zh => format!("需要 {n} 个参数"),
-    }
+    t(lang, "runtime.requires_n_args", &[("n", &n.to_string())])
 }
 
 /// "expected string value, got {val:?}"
 #[must_use]
 pub fn expected_string(lang: Lang, val: &crate::runtime::value::Value) -> String {
-    match lang {
-        Lang::En => format!("expected string value, got {val:?}"),
-        Lang::Zh => format!("期望字符串值，得到 {val:?}"),
-    }
+    t(
+        lang,
+        "runtime.expected_string",
+        &[("val", &format!("{val:?}"))],
+    )
 }
 
 /// "expected numeric value, got '{s}'"
 #[must_use]
 pub fn expected_numeric_str(lang: Lang, s: &str) -> String {
-    match lang {
-        Lang::En => format!("expected numeric value, got '{s}'"),
-        Lang::Zh => format!("期望数值，得到 '{s}'"),
-    }
+    t(lang, "runtime.expected_numeric_str", &[("s", s)])
 }
 
 /// "expected numeric value, got {val:?}"
 #[must_use]
 pub fn expected_numeric(lang: Lang, val: &crate::runtime::value::Value) -> String {
-    match lang {
-        Lang::En => format!("expected numeric value, got {val:?}"),
-        Lang::Zh => format!("期望数值，得到 {val:?}"),
-    }
+    t(
+        lang,
+        "runtime.expected_numeric",
+        &[("val", &format!("{val:?}"))],
+    )
 }
 
 /// "expected variable name, got {expr:?}"
 #[must_use]
 pub fn expected_var_name(lang: Lang, expr: &crate::parser::types::Expr) -> String {
-    match lang {
-        Lang::En => format!("expected variable name, got {expr:?}"),
-        Lang::Zh => format!("期望变量名，得到 {expr:?}"),
-    }
+    t(
+        lang,
+        "runtime.expected_var_name",
+        &[("expr", &format!("{expr:?}"))],
+    )
 }
 
 /// "expected variable reference, got {expr:?}"
 #[must_use]
 pub fn expected_var_ref(lang: Lang, expr: &crate::parser::types::Expr) -> String {
-    match lang {
-        Lang::En => format!("expected variable reference, got {expr:?}"),
-        Lang::Zh => format!("期望变量引用，得到 {expr:?}"),
-    }
+    t(
+        lang,
+        "runtime.expected_var_ref",
+        &[("expr", &format!("{expr:?}"))],
+    )
 }
 
 /// "expected numeric, got {val:?}"
 #[must_use]
 pub fn expected_numeric_any(lang: Lang, val: &crate::runtime::value::Value) -> String {
-    match lang {
-        Lang::En => format!("expected numeric, got {val:?}"),
-        Lang::Zh => format!("期望数值，得到 {val:?}"),
-    }
+    t(
+        lang,
+        "runtime.expected_numeric_any",
+        &[("val", &format!("{val:?}"))],
+    )
 }
 
 /// "expected numeric index, got {val:?}"
 #[must_use]
 pub fn expected_numeric_index(lang: Lang, val: &crate::runtime::value::Value) -> String {
-    match lang {
-        Lang::En => format!("expected numeric index, got {val:?}"),
-        Lang::Zh => format!("期望数值索引，得到 {val:?}"),
-    }
+    t(
+        lang,
+        "runtime.expected_numeric_index",
+        &[("val", &format!("{val:?}"))],
+    )
 }
 
 /// "index must be non-negative, got {n}"
 #[must_use]
 pub fn index_must_be_nonnegative(lang: Lang, n: i64) -> String {
-    match lang {
-        Lang::En => format!("index must be non-negative, got {n}"),
-        Lang::Zh => format!("索引必须非负，得到 {n}"),
-    }
+    t(
+        lang,
+        "runtime.index_must_be_nonnegative",
+        &[("n", &n.to_string())],
+    )
 }
 
 /// "index must be numeric"
@@ -378,61 +372,63 @@ pub fn index_must_be_numeric(lang: Lang) -> &'static str {
 /// "first argument must be a {kind}"
 #[must_use]
 pub fn first_arg_must_be(lang: Lang, kind: &str) -> String {
-    let zh_kind = match kind {
-        "dict" => "字典",
-        "list" => "列表",
-        _ => kind,
+    let kind_zh = match lang {
+        Lang::En => kind,
+        Lang::Zh => match kind {
+            "dict" => "字典",
+            "list" => "列表",
+            _ => kind,
+        },
     };
-    match lang {
-        Lang::En => format!("first argument must be a {kind}"),
-        Lang::Zh => format!("第一个参数必须是 {zh_kind}"),
-    }
+    t(lang, "runtime.first_arg_must_be", &[("kind", kind_zh)])
 }
 
 /// "argument must be a {kind}"
 #[must_use]
 pub fn argument_must_be(lang: Lang, kind: &str) -> String {
-    let zh_kind = match kind {
-        "dict" => "字典",
-        "list" => "列表",
-        _ => kind,
+    let kind_zh = match lang {
+        Lang::En => kind,
+        Lang::Zh => match kind {
+            "dict" => "字典",
+            "list" => "列表",
+            _ => kind,
+        },
     };
-    match lang {
-        Lang::En => format!("argument must be a {kind}"),
-        Lang::Zh => format!("参数必须是 {zh_kind}"),
-    }
+    t(lang, "runtime.argument_must_be", &[("kind", kind_zh)])
 }
 
 /// "{cmd} requires a variable name"
 #[must_use]
 pub fn cmd_requires_var(lang: Lang, cmd: &str) -> String {
-    match lang {
-        Lang::En => format!("{cmd} requires a variable name"),
-        Lang::Zh => format!("{cmd} 需要变量名"),
-    }
+    t(lang, "runtime.cmd_requires_var", &[("cmd", cmd)])
 }
 
 /// "{cmd} requires a {kind} argument"
 #[must_use]
 pub fn cmd_requires_container(lang: Lang, cmd: &str, kind: &str) -> String {
-    let zh_kind = match kind {
-        "dict" => "字典",
-        "list" => "列表",
-        _ => kind,
+    let kind_zh = match lang {
+        Lang::En => kind,
+        Lang::Zh => match kind {
+            "dict" => "字典",
+            "list" => "列表",
+            _ => kind,
+        },
     };
-    match lang {
-        Lang::En => format!("{cmd} requires a {kind} argument"),
-        Lang::Zh => format!("{cmd} 需要一个 {zh_kind} 参数"),
-    }
+    t(
+        lang,
+        "runtime.cmd_requires_container",
+        &[("cmd", cmd), ("kind", kind_zh)],
+    )
 }
 
 /// "expected list or string for join, got {val:?}"
 #[must_use]
 pub fn expected_list_or_string(lang: Lang, val: &crate::runtime::value::Value) -> String {
-    match lang {
-        Lang::En => format!("expected list or string for join, got {val:?}"),
-        Lang::Zh => format!("join 期望列表或字符串，得到 {val:?}"),
-    }
+    t(
+        lang,
+        "runtime.expected_list_or_string",
+        &[("val", &format!("{val:?}"))],
+    )
 }
 
 /// "separator must be a string or number"
@@ -487,55 +483,57 @@ pub fn io_get_no_args(lang: Lang) -> &'static str {
 /// "path must be absolute, got '{path}'"
 #[must_use]
 pub fn path_must_be_absolute(lang: Lang, path: &str) -> String {
-    match lang {
-        Lang::En => format!("path must be absolute, got '{path}'"),
-        Lang::Zh => format!("路径必须是绝对路径，得到 '{path}'"),
-    }
+    t(lang, "file.path_must_be_absolute", &[("path", path)])
 }
 
 /// "failed to write '{path}': {e}"
 #[must_use]
 pub fn failed_to_write(lang: Lang, path: &str, e: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("failed to write '{path}': {e}"),
-        Lang::Zh => format!("写入失败 '{path}': {e}"),
-    }
+    t(
+        lang,
+        "file.failed_to_write",
+        &[("path", path), ("e", &e.to_string())],
+    )
 }
 
 /// "failed to append '{path}': {e}"
 #[must_use]
 pub fn failed_to_append(lang: Lang, path: &str, e: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("failed to append '{path}': {e}"),
-        Lang::Zh => format!("追加失败 '{path}': {e}"),
-    }
+    t(
+        lang,
+        "file.failed_to_append",
+        &[("path", path), ("e", &e.to_string())],
+    )
 }
 
 /// "failed to read '{path}': {e}"
 #[must_use]
 pub fn failed_to_read(lang: Lang, path: &str, e: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("failed to read '{path}': {e}"),
-        Lang::Zh => format!("读取失败 '{path}': {e}"),
-    }
+    t(
+        lang,
+        "file.failed_to_read",
+        &[("path", path), ("e", &e.to_string())],
+    )
 }
 
 /// "failed to fetch '{url}': {e}"
 #[must_use]
 pub fn failed_to_fetch(lang: Lang, url: &str, e: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("failed to fetch '{url}': {e}"),
-        Lang::Zh => format!("获取失败 '{url}': {e}"),
-    }
+    t(
+        lang,
+        "net.failed_to_fetch",
+        &[("url", url), ("e", &e.to_string())],
+    )
 }
 
 /// "failed to read response from '{url}': {e}"
 #[must_use]
 pub fn failed_to_read_response(lang: Lang, url: &str, e: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("failed to read response from '{url}': {e}"),
-        Lang::Zh => format!("读取响应失败 '{url}': {e}"),
-    }
+    t(
+        lang,
+        "net.failed_to_read_response",
+        &[("url", url), ("e", &e.to_string())],
+    )
 }
 
 // ── Sqrt radicand errors ─────────────────────────────────────────────
@@ -543,19 +541,13 @@ pub fn failed_to_read_response(lang: Lang, url: &str, e: &dyn std::fmt::Display)
 /// "invalid sqrt radicand numerator: '{s}'"
 #[must_use]
 pub fn invalid_sqrt_num(lang: Lang, s: &str) -> String {
-    match lang {
-        Lang::En => format!("invalid sqrt radicand numerator: '{s}'"),
-        Lang::Zh => format!("无效平方根分子: '{s}'"),
-    }
+    t(lang, "sqrt.invalid_num", &[("s", s)])
 }
 
 /// "invalid sqrt radicand denominator: '{s}'"
 #[must_use]
 pub fn invalid_sqrt_den(lang: Lang, s: &str) -> String {
-    match lang {
-        Lang::En => format!("invalid sqrt radicand denominator: '{s}'"),
-        Lang::Zh => format!("无效平方根分母: '{s}'"),
-    }
+    t(lang, "sqrt.invalid_den", &[("s", s)])
 }
 
 /// "sqrt radicand denominator is zero"
@@ -570,10 +562,7 @@ pub fn sqrt_den_zero(lang: Lang) -> &'static str {
 /// "invalid sqrt radicand: '{s}'"
 #[must_use]
 pub fn invalid_sqrt(lang: Lang, s: &str) -> String {
-    match lang {
-        Lang::En => format!("invalid sqrt radicand: '{s}'"),
-        Lang::Zh => format!("无效平方根被开方数: '{s}'"),
-    }
+    t(lang, "sqrt.invalid", &[("s", s)])
 }
 
 // ── Time error messages ──────────────────────────────────────────────
@@ -592,111 +581,93 @@ pub fn time_wait_nonnegative(lang: Lang) -> &'static str {
 /// "io.in — no input available"
 #[must_use]
 pub fn warn_io_in_no_input(lang: Lang) -> String {
-    match lang {
-        Lang::En => "io.in — no input available".to_string(),
-        Lang::Zh => "io.in — 无可用输入".to_string(),
-    }
+    t(lang, "debug.io_in_no_input", &[])
 }
 
 /// "io.get — no input available"
 #[must_use]
 pub fn warn_io_get_no_input(lang: Lang) -> String {
-    match lang {
-        Lang::En => "io.get — no input available".to_string(),
-        Lang::Zh => "io.get — 无可用输入".to_string(),
-    }
+    t(lang, "debug.io_get_no_input", &[])
 }
 
 /// "io.inpasswd — no input available"
 #[must_use]
 pub fn warn_io_inpasswd_no_input(lang: Lang) -> String {
-    match lang {
-        Lang::En => "io.inpasswd — no input available".to_string(),
-        Lang::Zh => "io.inpasswd — 无可用输入".to_string(),
-    }
+    t(lang, "debug.io_inpasswd_no_input", &[])
 }
 
 /// "user.id — could not determine user id"
 #[must_use]
 pub fn warn_user_id(lang: Lang) -> String {
-    match lang {
-        Lang::En => "user.id — could not determine user id".to_string(),
-        Lang::Zh => "user.id — 无法确定用户 ID".to_string(),
-    }
+    t(lang, "debug.user_id", &[])
 }
 
 /// "user.name — could not determine username"
 #[must_use]
 pub fn warn_user_name(lang: Lang) -> String {
-    match lang {
-        Lang::En => "user.name — could not determine username".to_string(),
-        Lang::Zh => "user.name — 无法确定用户名".to_string(),
-    }
+    t(lang, "debug.user_name", &[])
 }
 
 /// "user.bash — command '{cmd}' failed with status {status}"
 #[must_use]
 pub fn warn_user_bash_status(lang: Lang, cmd: &str, status: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("user.bash — command '{cmd}' failed with status {status}"),
-        Lang::Zh => format!("user.bash — 命令 '{cmd}' 失败，状态 {status}"),
-    }
+    t(
+        lang,
+        "debug.user_bash_status",
+        &[("cmd", cmd), ("status", &status.to_string())],
+    )
 }
 
 /// "user.bash — failed to execute '{cmd}': {e}"
 #[must_use]
 pub fn warn_user_bash_exec(lang: Lang, cmd: &str, e: &dyn std::fmt::Display) -> String {
-    match lang {
-        Lang::En => format!("user.bash — failed to execute '{cmd}': {e}"),
-        Lang::Zh => format!("user.bash — 执行 '{cmd}' 失败: {e}"),
-    }
+    t(
+        lang,
+        "debug.user_bash_exec",
+        &[("cmd", cmd), ("e", &e.to_string())],
+    )
 }
 
 /// "dict.get — missing key"
 #[must_use]
 pub fn warn_dict_get_missing_key(lang: Lang) -> String {
-    match lang {
-        Lang::En => "dict.get — missing key".to_string(),
-        Lang::Zh => "dict.get — 键不存在".to_string(),
-    }
+    t(lang, "debug.dict_get_missing_key", &[])
 }
 
 /// "list.get — index {idx} out of bounds (len {len})"
 #[must_use]
 pub fn warn_list_get_oob(lang: Lang, idx: i64, len: usize) -> String {
-    match lang {
-        Lang::En => format!("list.get — index {idx} out of bounds (len {len})"),
-        Lang::Zh => format!("list.get — 索引 {idx} 越界（长度 {len}）"),
-    }
+    t(
+        lang,
+        "debug.list_get_oob",
+        &[("idx", &idx.to_string()), ("len", &len.to_string())],
+    )
 }
 
 /// "list.remove — index {idx} out of bounds (len {len})"
 #[must_use]
 pub fn warn_list_remove_oob(lang: Lang, idx: i64, len: usize) -> String {
-    match lang {
-        Lang::En => format!("list.remove — index {idx} out of bounds (len {len})"),
-        Lang::Zh => format!("list.remove — 索引 {idx} 越界（长度 {len}）"),
-    }
+    t(
+        lang,
+        "debug.list_remove_oob",
+        &[("idx", &idx.to_string()), ("len", &len.to_string())],
+    )
 }
 
 /// "invalid regex pattern '{pat}'"
 #[must_use]
 pub fn warn_invalid_regex(lang: Lang, pat: &str) -> String {
-    match lang {
-        Lang::En => format!("invalid regex pattern '{pat}'"),
-        Lang::Zh => format!("无效正则表达式 '{pat}'"),
-    }
+    t(lang, "debug.invalid_regex", &[("pat", pat)])
 }
 
 /// "block span underdeclared — declared {body} lines, only {avail} available"
 #[must_use]
 pub fn warn_block_underdeclared(lang: Lang, body: usize, avail: usize) -> String {
-    match lang {
-        Lang::En => {
-            format!("block span underdeclared — declared {body} lines, only {avail} available")
-        }
-        Lang::Zh => format!("代码块行数不足 — 声明 {body} 行，仅有 {avail} 行可用"),
-    }
+    t(
+        lang,
+        "debug.block_underdeclared",
+        &[("body", &body.to_string()), ("avail", &avail.to_string())],
+    )
 }
 
 /// "invalid char offset"

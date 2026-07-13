@@ -129,3 +129,63 @@ fn t_returns_key_name_when_completely_missing() {
     let msg = t(Lang::En, "nonexistent.totally_missing_key", &[]);
     assert_eq!(msg, "nonexistent.totally_missing_key");
 }
+
+// ── Task 4: characterization tests for existing pub fn wrappers ──────
+
+use dyyl::i18n::{
+    cli_version_banner, cli_usage, division_by_zero, failed_to_write, mcm_no_host_provider,
+    reason_prefix, undefined_variable, unknown_command, warn_list_get_oob,
+};
+
+#[test]
+fn existing_wrappers_produce_same_en_output() {
+    assert_eq!(
+        cli_version_banner(Lang::En),
+        "dyyl 0.2.0 — script interpreter"
+    );
+    assert_eq!(cli_usage(Lang::En), "Usage: dyyl [--debug] <filename>");
+    assert_eq!(division_by_zero(Lang::En), "division by zero");
+    assert_eq!(
+        mcm_no_host_provider(Lang::En),
+        "mcm command requires a host provider (use --host-json)"
+    );
+    assert_eq!(reason_prefix(Lang::En), "  reason: ");
+    assert_eq!(
+        unknown_command(Lang::En, "dict", "foo"),
+        "unknown dict command 'foo'"
+    );
+    assert_eq!(
+        undefined_variable(Lang::En, "bar"),
+        "undefined variable 'bar'"
+    );
+    assert_eq!(
+        failed_to_write(Lang::En, "/tmp/x", &std::io::Error::other("nope")),
+        "failed to write '/tmp/x': nope"
+    );
+    assert_eq!(
+        warn_list_get_oob(Lang::En, 5, 3),
+        "list.get — index 5 out of bounds (len 3)"
+    );
+}
+
+#[test]
+fn existing_wrappers_produce_same_zh_output() {
+    assert_eq!(
+        cli_version_banner(Lang::Zh),
+        "dyyl 0.2.0 — 脚本解释器"
+    );
+    assert_eq!(division_by_zero(Lang::Zh), "除以零");
+    assert_eq!(
+        mcm_no_host_provider(Lang::Zh),
+        "mcm 命令需要主机提供者（使用 --host-json）"
+    );
+    assert_eq!(reason_prefix(Lang::Zh), "  原因: ");
+    assert_eq!(
+        unknown_command(Lang::Zh, "dict", "foo"),
+        "未知字典命令 'foo'"
+    );
+    assert_eq!(
+        warn_list_get_oob(Lang::Zh, 5, 3),
+        "list.get — 索引 5 越界（长度 3）"
+    );
+}
