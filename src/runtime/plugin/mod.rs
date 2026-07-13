@@ -11,6 +11,7 @@ pub mod loader;
 pub mod manifest;
 pub mod registry;
 pub mod store;
+pub mod value_codec;
 
 use std::collections::HashMap;
 use std::sync::Mutex;
