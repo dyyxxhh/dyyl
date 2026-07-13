@@ -22,9 +22,15 @@ use dyyl::runtime::host_provider::StdioHostConnection;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
+    // Check for plugin management subcommands first.
+    let mut lang = Lang::default();
+    match dyyl::cli::try_handle_subcommand(&args, &mut lang) {
+        dyyl::cli::CliResult::Handled(code) => process::exit(code),
+        dyyl::cli::CliResult::NotASubcommand => {}
+    }
+
     let mut debug = false;
     let mut host_json = false;
-    let mut lang = Lang::default();
     let mut lang_explicit = false;
     let mut filename: Option<String> = None;
 

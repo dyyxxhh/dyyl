@@ -3,6 +3,7 @@
 /// This crate provides a binary (`dyyl <filename>`) for executing dyyl scripts.
 /// The library defines the CAS backend, lexer, parser, math/CAS layer, and runtime.
 pub mod cas_backend;
+pub mod cli;
 pub mod config;
 pub mod i18n;
 pub mod lexer;
