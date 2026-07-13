@@ -261,3 +261,37 @@ fn plugin_wrappers_zh() {
         "插件 'migpt' SHA256 校验和不匹配"
     );
 }
+
+// ── Task 6: fallback and plugin registration integration tests ──────
+
+#[test]
+fn t_fallback_zh_to_en_emits_correct_text() {
+    let mut en = HashMap::new();
+    en.insert("fallbacktest.hello".to_string(), "hello world".to_string());
+    register_plugin("fallbacktest", en, HashMap::new());
+    let msg = t(Lang::Zh, "fallbacktest.hello", &[]);
+    assert_eq!(msg, "hello world");
+}
+
+#[test]
+fn t_plugin_key_resolves_from_plugin_table() {
+    let mut en = HashMap::new();
+    en.insert("regtest.greeting".to_string(), "hi from plugin".to_string());
+    let mut zh = HashMap::new();
+    zh.insert("regtest.greeting".to_string(), "插件问候".to_string());
+    register_plugin("regtest", en, zh);
+    assert_eq!(t(Lang::En, "regtest.greeting", &[]), "hi from plugin");
+    assert_eq!(t(Lang::Zh, "regtest.greeting", &[]), "插件问候");
+}
+
+#[test]
+fn t_dyyl_main_key_not_shadowed_by_plugin_prefix_mismatch() {
+    let msg = t(Lang::En, "runtime.division_by_zero", &[]);
+    assert_eq!(msg, "division by zero");
+}
+
+#[test]
+fn t_missing_placeholder_left_as_is() {
+    let msg = t(Lang::En, "runtime.undefined_variable", &[]);
+    assert_eq!(msg, "undefined variable '{name}'");
+}
