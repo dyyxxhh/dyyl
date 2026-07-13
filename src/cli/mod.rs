@@ -21,7 +21,11 @@ pub fn try_handle_subcommand(args: &[String], lang: &mut Lang) -> CliResult {
     // Find first non-flag arg (the subcommand candidate).
     let mut i = 1;
     while i < args.len() {
-        match args[i].as_str() {
+        let arg = match args.get(i) {
+            Some(a) => a.as_str(),
+            None => break,
+        };
+        match arg {
             "--lang" => {
                 i += 1;
                 if let Some(val) = args.get(i) {
@@ -32,9 +36,8 @@ pub fn try_handle_subcommand(args: &[String], lang: &mut Lang) -> CliResult {
             }
             "--debug" | "--host-json" => { /* ignore for CLI */ }
             "install" | "update" | "remove" | "autoremove" | "list" => {
-                let sub = args[i].as_str();
-                let rest = &args[i + 1..];
-                let code = plugin_cmds::dispatch(sub, rest, *lang);
+                let rest = args.get(i + 1..).unwrap_or(&[]);
+                let code = plugin_cmds::dispatch(arg, rest, *lang);
                 return CliResult::Handled(code);
             }
             _ => return CliResult::NotASubcommand,

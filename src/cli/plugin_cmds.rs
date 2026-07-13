@@ -21,11 +21,13 @@ pub fn dispatch(sub: &str, args: &[String], lang: Lang) -> i32 {
 }
 
 fn cmd_install(args: &[String], lang: Lang) -> i32 {
-    if args.is_empty() {
-        eprintln!("{}", crate::i18n::cli_plugin_usage(lang));
-        return 1;
-    }
-    let name = &args[0];
+    let name = match args.first() {
+        Some(n) => n.as_str(),
+        None => {
+            eprintln!("{}", crate::i18n::cli_plugin_usage(lang));
+            return 1;
+        }
+    };
 
     // Check if already installed with same version.
     if let Some(existing) = crate::runtime::plugin::registry::find_installed(name) {
@@ -33,7 +35,8 @@ fn cmd_install(args: &[String], lang: Lang) -> i32 {
             Ok(s) => s,
             Err(_) => String::new(),
         };
-        if let Ok(t) = toml::from_str::<crate::runtime::plugin::manifest::LocalPluginToml>(&toml_content)
+        if let Ok(t) =
+            toml::from_str::<crate::runtime::plugin::manifest::LocalPluginToml>(&toml_content)
         {
             // Fetch remote manifest to check if same version.
             if let Ok(remote) = crate::runtime::plugin::fetch::fetch_manifest(name) {
@@ -67,9 +70,7 @@ fn cmd_install(args: &[String], lang: Lang) -> i32 {
 /// Install a plugin: fetch manifest, download, verify, write to XDG dir.
 /// Returns the installed version string.
 fn install_plugin_by_name(name: &str, lang: Lang) -> Result<String, String> {
-    use crate::runtime::plugin::{
-        abi::DYRL_API_VERSION, fetch, manifest::*, store,
-    };
+    use crate::runtime::plugin::{abi::DYRL_API_VERSION, fetch, manifest::*, store};
     use std::fs;
 
     let manifest = fetch::fetch_manifest(name).map_err(|e| format!("{e}"))?;
@@ -90,8 +91,8 @@ fn install_plugin_by_name(name: &str, lang: Lang) -> Result<String, String> {
         .find(|p| p.platform == current)
         .ok_or_else(|| format!("no build for {current}"))?;
 
-    let bytes = fetch::download_and_verify(&entry.url, &entry.sha256)
-        .map_err(|e| format!("{e}"))?;
+    let bytes =
+        fetch::download_and_verify(&entry.url, &entry.sha256).map_err(|e| format!("{e}"))?;
 
     let lib_path = store::lib_path(name, &manifest.version);
     let toml_path = store::plugin_toml_path(name, &manifest.version);
@@ -151,7 +152,13 @@ fn cmd_update(args: &[String], lang: Lang) -> i32 {
             0
         }
     } else {
-        let name = &args[0];
+        let name = match args.first() {
+            Some(n) => n.as_str(),
+            None => {
+                eprintln!("{}", crate::i18n::cli_plugin_usage(lang));
+                return 1;
+            }
+        };
         if crate::runtime::plugin::registry::find_installed(name).is_none() {
             eprintln!("{}", crate::i18n::plugin_not_installed(lang, name));
             return 1;
@@ -257,11 +264,13 @@ fn update_single(name: &str, lang: Lang) -> UpdateOutcome {
 }
 
 fn cmd_remove(args: &[String], lang: Lang) -> i32 {
-    if args.is_empty() {
-        eprintln!("{}", crate::i18n::cli_plugin_usage(lang));
-        return 1;
-    }
-    let name = &args[0];
+    let name = match args.first() {
+        Some(n) => n.as_str(),
+        None => {
+            eprintln!("{}", crate::i18n::cli_plugin_usage(lang));
+            return 1;
+        }
+    };
 
     // Check if installed.
     if crate::runtime::plugin::registry::find_installed(name).is_none() {
@@ -363,10 +372,11 @@ fn cmd_list(args: &[String], lang: Lang) -> i32 {
             Ok(s) => s,
             Err(_) => continue,
         };
-        let toml: crate::runtime::plugin::manifest::LocalPluginToml = match toml::from_str(&toml_content) {
-            Ok(t) => t,
-            Err(_) => continue,
-        };
+        let toml: crate::runtime::plugin::manifest::LocalPluginToml =
+            match toml::from_str(&toml_content) {
+                Ok(t) => t,
+                Err(_) => continue,
+            };
         // Check config for last_used_at.
         let last_used = crate::config::load_config()
             .ok()
