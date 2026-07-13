@@ -42,8 +42,10 @@ fn scan_line(line: &str, line_no: usize, next_id: u32) -> Option<Placeholder> {
             }
         }
         let rest = after.trim_start();
+        // consumed_after 相对于 trim 后的 rest；补回前导空白以正确切片 after。
+        let leading = after.len() - rest.len();
         let (hint, consumed_after) = parse_hint(rest);
-        let original_text = format!("ai.auto{}", &after[..consumed_after]);
+        let original_text = format!("ai.auto{}", &after[..leading + consumed_after]);
         let hint_opt = hint.map(|s| s.to_string());
         return Some(Placeholder {
             id: next_id,
@@ -80,4 +82,104 @@ fn parse_hint(rest: &str) -> (Option<&str>, usize) {
         return (None, 0);
     }
     (Some(bareword), end)
+}
+
+use crate::ai::prompt::FilledValue;
+use std::collections::HashMap;
+
+/// 把占位符替换为 `ai.auto.filled <提示>, <值>` 并返回新源码。
+///
+/// 若某占位符在 `values` 中缺失，保持原 `ai.auto ...` 不变。
+pub fn rewrite_placeholders(
+    content: &str,
+    placeholders: &[Placeholder],
+    values: &HashMap<String, FilledValue>,
+) -> String {
+    let mut result = content.to_string();
+    for p in placeholders {
+        let filled = match values.get(&p.id.to_string()) {
+            Some(v) => v,
+            None => continue,
+        };
+        let value_literal = if filled.is_number {
+            filled.value.clone()
+        } else {
+            escape_dyyl_string(&filled.value)
+        };
+        let hint_literal = match &p.hint {
+            Some(h) => escape_dyyl_string(h),
+            None => "_".to_string(),
+        };
+        let replacement = format!("ai.auto.filled {hint_literal}, {value_literal}");
+        result = result.replacen(&p.original_text, &replacement, 1);
+    }
+    result
+}
+
+/// 把 `ai.auto.filled <提示>, <值>` 替换回 `ai.auto <提示>`。
+pub fn reset_filled(content: &str) -> String {
+    let mut result = content.to_string();
+    loop {
+        let pos = match result.find("ai.auto.filled") {
+            Some(p) => p,
+            None => break,
+        };
+        let after = &result[pos + "ai.auto.filled".len()..];
+        let (hint_literal, consumed) = parse_filled_args(after);
+        let hint_str = match hint_literal.trim() {
+            "_" | "" => String::new(),
+            s => format!(" {s}"),
+        };
+        let replacement = format!("ai.auto{hint_str}");
+        let full_segment = format!("ai.auto.filled{}", &after[..consumed]);
+        result = result.replacen(&full_segment, &replacement, 1);
+    }
+    result
+}
+
+/// 解析 `ai.auto.filled` 之后的参数段。
+///
+/// 返回 (提示字面量字符串, consumed_chars_from_after)。
+/// consumed 到行尾（含值部分，便于 replacen 完整匹配）。
+fn parse_filled_args(rest: &str) -> (String, usize) {
+    let line_end = rest.find('\n').unwrap_or(rest.len());
+    let segment = &rest[..line_end];
+    // 找顶层逗号分隔提示和值。
+    let comma_pos = match find_top_level_comma(segment) {
+        Some(p) => p,
+        None => return (segment.trim().to_string(), line_end),
+    };
+    let hint_part = segment[..comma_pos].trim().to_string();
+    (hint_part, line_end)
+}
+
+/// 找顶层逗号（不在引号内）。
+fn find_top_level_comma(s: &str) -> Option<usize> {
+    let mut in_quote: Option<char> = None;
+    for (i, c) in s.char_indices() {
+        match in_quote {
+            Some(q) => {
+                if c == q {
+                    in_quote = None;
+                }
+            }
+            None => {
+                if c == '"' || c == '\'' {
+                    in_quote = Some(c);
+                } else if c == ',' {
+                    return Some(i);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// 转义 dyyl 字符串字面量：双引号包裹，转义 `"` `\` 换行。
+fn escape_dyyl_string(s: &str) -> String {
+    let escaped = s
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n");
+    format!("\"{escaped}\"")
 }
