@@ -14,6 +14,20 @@ pub struct DyylConfig {
     /// Preferred output language for i18n (e.g. `"zh"`, `"en"`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lang: Option<String>,
+    /// Installed plugins with `last_used_at` tracking.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub installed_plugins: std::collections::HashMap<String, InstalledPluginRecord>,
+}
+
+/// Record of an installed plugin, for `last_used_at` tracking.
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
+pub struct InstalledPluginRecord {
+    /// Version string (may be `None` if unknown).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    /// ISO 8601 timestamp of last successful dispatch.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_used_at: Option<String>,
 }
 
 /// Returns the XDG-compliant path to `config.toml`.
@@ -95,6 +109,7 @@ mod tests {
     fn roundtrip_toml() {
         let cfg = DyylConfig {
             lang: Some("zh".to_owned()),
+            installed_plugins: std::collections::HashMap::new(),
         };
         let s = toml::to_string_pretty(&cfg).unwrap();
         let parsed: DyylConfig = toml::from_str(&s).unwrap();

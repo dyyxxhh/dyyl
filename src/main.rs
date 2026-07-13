@@ -76,6 +76,7 @@ fn main() {
             if lang_explicit {
                 let config = dyyl::config::DyylConfig {
                     lang: Some(lang.name().to_owned()),
+                    installed_plugins: std::collections::HashMap::new(),
                 };
                 if let Err(e) = dyyl::config::save_config(&config) {
                     eprintln!("dyyl: failed to save config: {e}");
