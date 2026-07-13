@@ -2,6 +2,9 @@
 
 use crate::i18n::Lang;
 
+/// Plugins unused for this many days are removed by `autoremove`.
+const AUTOREMOVE_DAYS: i64 = 30;
+
 /// Dispatch a plugin subcommand. Returns exit code.
 pub fn dispatch(sub: &str, args: &[String], lang: Lang) -> i32 {
     match sub {
@@ -287,9 +290,56 @@ fn cmd_remove(args: &[String], lang: Lang) -> i32 {
 }
 
 fn cmd_autoremove(args: &[String], lang: Lang) -> i32 {
-    let _ = (args, lang);
-    eprintln!("autoremove: not yet implemented");
-    1
+    let _ = args;
+    let installed = match crate::runtime::plugin::registry::scan_installed() {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{e}");
+            return 1;
+        }
+    };
+    let mut config = crate::config::load_config().unwrap_or_default();
+    let now = chrono::Utc::now();
+    let mut removed_count = 0usize;
+
+    for p in &installed {
+        let last_used = config
+            .installed_plugins
+            .get(&p.name)
+            .and_then(|r| r.last_used_at.as_ref())
+            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+            .map(|dt| dt.with_timezone(&chrono::Utc));
+
+        let days_ago: i64 = match last_used {
+            Some(dt) => (now - dt).num_days(),
+            None => i64::MAX, // Never used — remove.
+        };
+
+        if days_ago >= AUTOREMOVE_DAYS {
+            let plugin_dir = crate::runtime::plugin::store::plugin_dir().join(&p.name);
+            if std::fs::remove_dir_all(&plugin_dir).is_ok() {
+                config.installed_plugins.remove(&p.name);
+                if days_ago == i64::MAX {
+                    println!("{}", crate::i18n::plugin_removed(lang, &p.name));
+                } else {
+                    println!(
+                        "{}",
+                        crate::i18n::plugin_autoremove_removed(lang, &p.name, days_ago as u64)
+                    );
+                }
+                removed_count += 1;
+            }
+        }
+    }
+
+    if removed_count > 0 {
+        let _ = crate::config::save_config(&config);
+    }
+    println!(
+        "{}",
+        crate::i18n::plugin_autoremove_summary(lang, removed_count)
+    );
+    0
 }
 
 fn cmd_list(args: &[String], lang: Lang) -> i32 {
