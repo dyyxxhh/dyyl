@@ -43,7 +43,7 @@ impl Lang {
 // ── Message store (key-value table backed by JSON resources) ───────
 
 use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 
 /// Plugin-registered message tables.
 #[derive(Default)]
@@ -57,7 +57,7 @@ pub struct PluginMessages {
 pub struct MessageStore {
     en: HashMap<String, String>,
     zh: HashMap<String, String>,
-    plugins: HashMap<String, PluginMessages>,
+    plugins: Mutex<HashMap<String, PluginMessages>>,
 }
 
 static STORE: OnceLock<MessageStore> = OnceLock::new();
@@ -73,7 +73,7 @@ fn init_store() -> MessageStore {
     MessageStore {
         en: parse_json(EN_JSON),
         zh: parse_json(ZH_JSON),
-        plugins: HashMap::new(),
+        plugins: Mutex::new(HashMap::new()),
     }
 }
 
@@ -94,11 +94,49 @@ pub fn t(lang: Lang, key: &str, args: &[(&str, &str)]) -> String {
     interpolate(&template, args)
 }
 
+/// Register a plugin's message tables. Called by PluginManager when loading
+/// a plugin that ships locale files.
+pub fn register_plugin(
+    name: &str,
+    en: HashMap<String, String>,
+    zh: HashMap<String, String>,
+) {
+    let s = store();
+    let mut plugins = s.plugins.lock().expect("plugins mutex poisoned");
+    plugins.insert(name.to_string(), PluginMessages { en, zh });
+}
+
+/// Return all keys in the dyyl main table (not plugin keys).
+/// Used for coverage testing.
+#[must_use]
+pub fn all_keys() -> Vec<&'static str> {
+    let s = store();
+    s.en.keys().map(String::as_str).collect()
+}
+
+/// Return keys present in en but missing in the given language's main table.
+/// For Zh, this checks zh.json. For En, always empty (en is the source).
+/// Must return empty in CI — serves as coverage gate.
+#[must_use]
+pub fn missing_translations(lang: Lang) -> Vec<&'static str> {
+    let s = store();
+    match lang {
+        Lang::En => Vec::new(),
+        Lang::Zh => s
+            .en
+            .keys()
+            .filter(|k| !s.zh.contains_key(*k))
+            .map(String::as_str)
+            .collect(),
+    }
+}
+
 impl MessageStore {
     fn lookup_template(&self, lang: Lang, key: &str, plugin_name: &str) -> String {
         // 1. Plugin table (if this plugin is registered and key starts with plugin name)
         if key.starts_with(&format!("{plugin_name}.")) {
-            if let Some(pm) = self.plugins.get(plugin_name) {
+            let plugins = self.plugins.lock().expect("plugins mutex poisoned");
+            if let Some(pm) = plugins.get(plugin_name) {
                 if let Some(tpl) = match lang {
                     Lang::En => pm.en.get(key),
                     Lang::Zh => pm.zh.get(key).or_else(|| pm.en.get(key)),
