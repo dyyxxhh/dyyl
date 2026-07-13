@@ -125,9 +125,36 @@ fn cmd_update(args: &[String], lang: Lang) -> i32 {
 }
 
 fn cmd_remove(args: &[String], lang: Lang) -> i32 {
-    let _ = (args, lang);
-    eprintln!("remove: not yet implemented");
-    1
+    if args.is_empty() {
+        eprintln!("{}", crate::i18n::cli_plugin_usage(lang));
+        return 1;
+    }
+    let name = &args[0];
+
+    // Check if installed.
+    if crate::runtime::plugin::registry::find_installed(name).is_none() {
+        eprintln!("{}", crate::i18n::plugin_not_installed(lang, name));
+        return 1;
+    }
+
+    // Remove the entire plugin directory (all versions).
+    let plugin_dir = crate::runtime::plugin::store::plugin_dir().join(name);
+    if let Err(e) = std::fs::remove_dir_all(&plugin_dir) {
+        eprintln!(
+            "{}",
+            crate::i18n::plugin_remove_failed(lang, name, &e.to_string())
+        );
+        return 1;
+    }
+
+    // Remove from config.
+    if let Ok(mut config) = crate::config::load_config() {
+        config.installed_plugins.remove(name);
+        let _ = crate::config::save_config(&config);
+    }
+
+    println!("{}", crate::i18n::plugin_removed(lang, name));
+    0
 }
 
 fn cmd_autoremove(args: &[String], lang: Lang) -> i32 {
