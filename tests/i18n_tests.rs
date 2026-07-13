@@ -133,7 +133,7 @@ fn t_returns_key_name_when_completely_missing() {
 // ── Task 4: characterization tests for existing pub fn wrappers ──────
 
 use dyyl::i18n::{
-    cli_version_banner, cli_usage, division_by_zero, failed_to_write, mcm_no_host_provider,
+    cli_usage, cli_version_banner, division_by_zero, failed_to_write, mcm_no_host_provider,
     reason_prefix, undefined_variable, unknown_command, warn_list_get_oob,
 };
 
@@ -170,10 +170,7 @@ fn existing_wrappers_produce_same_en_output() {
 
 #[test]
 fn existing_wrappers_produce_same_zh_output() {
-    assert_eq!(
-        cli_version_banner(Lang::Zh),
-        "dyyl 0.2.0 — 脚本解释器"
-    );
+    assert_eq!(cli_version_banner(Lang::Zh), "dyyl 0.2.0 — 脚本解释器");
     assert_eq!(division_by_zero(Lang::Zh), "除以零");
     assert_eq!(
         mcm_no_host_provider(Lang::Zh),
@@ -187,5 +184,80 @@ fn existing_wrappers_produce_same_zh_output() {
     assert_eq!(
         warn_list_get_oob(Lang::Zh, 5, 3),
         "list.get — 索引 5 越界（长度 3）"
+    );
+}
+
+// ── Task 5: plugin wrapper function tests ────────────────────────────
+
+use dyyl::i18n::{
+    cli_plugin_subcommand_unknown, cli_plugin_usage, plugin_already_installed,
+    plugin_already_latest, plugin_autoremove_summary, plugin_install_success, plugin_list_empty,
+    plugin_list_header, plugin_not_installed, plugin_removed, plugin_sha256_mismatch,
+    plugin_update_all_summary, plugin_updated,
+};
+
+#[test]
+fn plugin_wrappers_en() {
+    assert_eq!(
+        plugin_install_success(Lang::En, "migpt", "0.1.0"),
+        "installed migpt 0.1.0"
+    );
+    assert_eq!(
+        plugin_already_installed(Lang::En, "migpt", "0.1.0"),
+        "migpt 0.1.0 already installed"
+    );
+    assert_eq!(
+        plugin_updated(Lang::En, "migpt", "0.1.0", "0.2.0"),
+        "updated migpt 0.1.0 -> 0.2.0"
+    );
+    assert_eq!(
+        plugin_already_latest(Lang::En, "migpt", "0.1.0"),
+        "migpt already latest (0.1.0)"
+    );
+    assert_eq!(plugin_removed(Lang::En, "migpt"), "removed migpt");
+    assert_eq!(
+        plugin_not_installed(Lang::En, "migpt"),
+        "error: migpt not installed"
+    );
+    assert_eq!(
+        plugin_sha256_mismatch(Lang::En, "migpt"),
+        "plugin 'migpt' SHA256 checksum mismatch"
+    );
+    assert_eq!(
+        plugin_list_header(Lang::En),
+        "NAME VERSION LAST_USED INSTALLED"
+    );
+    assert_eq!(plugin_list_empty(Lang::En), "no plugins installed");
+    assert_eq!(
+        plugin_autoremove_summary(Lang::En, 3),
+        "autoremoved 3 plugins"
+    );
+    assert_eq!(
+        plugin_update_all_summary(Lang::En, 2, 1, 0),
+        "updated 2, already-latest 1, failed 0"
+    );
+    assert_eq!(
+        cli_plugin_subcommand_unknown(Lang::En, "foo"),
+        "dyyl: unknown subcommand 'foo'"
+    );
+    let _ = cli_plugin_usage(Lang::En); // ensure it compiles/returns
+}
+
+#[test]
+fn plugin_wrappers_zh() {
+    assert_eq!(
+        plugin_install_success(Lang::Zh, "migpt", "0.1.0"),
+        "已安装 migpt 0.1.0"
+    );
+    assert_eq!(plugin_removed(Lang::Zh, "migpt"), "已卸载 migpt");
+    assert_eq!(plugin_list_header(Lang::Zh), "名称 版本 上次使用 安装时间");
+    assert_eq!(plugin_list_empty(Lang::Zh), "未安装任何插件");
+    assert_eq!(
+        plugin_autoremove_summary(Lang::Zh, 3),
+        "自动清理了 3 个插件"
+    );
+    assert_eq!(
+        plugin_sha256_mismatch(Lang::Zh, "migpt"),
+        "插件 'migpt' SHA256 校验和不匹配"
     );
 }

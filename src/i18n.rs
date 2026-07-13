@@ -96,11 +96,7 @@ pub fn t(lang: Lang, key: &str, args: &[(&str, &str)]) -> String {
 
 /// Register a plugin's message tables. Called by PluginManager when loading
 /// a plugin that ships locale files.
-pub fn register_plugin(
-    name: &str,
-    en: HashMap<String, String>,
-    zh: HashMap<String, String>,
-) {
+pub fn register_plugin(name: &str, en: HashMap<String, String>, zh: HashMap<String, String>) {
     let s = store();
     let mut plugins = s.plugins.lock().expect("plugins mutex poisoned");
     plugins.insert(name.to_string(), PluginMessages { en, zh });
@@ -122,12 +118,12 @@ pub fn missing_translations(lang: Lang) -> Vec<&'static str> {
     let s = store();
     match lang {
         Lang::En => Vec::new(),
-        Lang::Zh => s
-            .en
-            .keys()
-            .filter(|k| !s.zh.contains_key(*k))
-            .map(String::as_str)
-            .collect(),
+        Lang::Zh => {
+            s.en.keys()
+                .filter(|k| !s.zh.contains_key(*k))
+                .map(String::as_str)
+                .collect()
+        }
     }
 }
 
@@ -232,7 +228,11 @@ pub fn cli_usage(lang: Lang) -> &'static str {
 /// "dyyl: cannot read '{path}': {e}" / "dyyl: 无法读取 '{path}': {e}"
 #[must_use]
 pub fn cli_cannot_read(lang: Lang, path: &str, e: &dyn std::fmt::Display) -> String {
-    t(lang, "cli.cannot_read", &[("path", path), ("e", &e.to_string())])
+    t(
+        lang,
+        "cli.cannot_read",
+        &[("path", path), ("e", &e.to_string())],
+    )
 }
 
 // ── Generic runtime error patterns ───────────────────────────────────
@@ -697,6 +697,282 @@ pub fn mcm_no_host_provider(lang: Lang) -> &'static str {
         Lang::En => "mcm command requires a host provider (use --host-json)",
         Lang::Zh => "mcm 命令需要主机提供者（使用 --host-json）",
     }
+}
+
+// ── Plugin system messages ──────────────────────────────────────────
+
+#[must_use]
+pub fn plugin_install_success(lang: Lang, name: &str, ver: &str) -> String {
+    t(
+        lang,
+        "plugin.install_success",
+        &[("name", name), ("ver", ver)],
+    )
+}
+
+#[must_use]
+pub fn plugin_already_installed(lang: Lang, name: &str, ver: &str) -> String {
+    t(
+        lang,
+        "plugin.already_installed",
+        &[("name", name), ("ver", ver)],
+    )
+}
+
+#[must_use]
+pub fn plugin_updated(lang: Lang, name: &str, old: &str, new: &str) -> String {
+    t(
+        lang,
+        "plugin.updated",
+        &[("name", name), ("old", old), ("new", new)],
+    )
+}
+
+#[must_use]
+pub fn plugin_already_latest(lang: Lang, name: &str, ver: &str) -> String {
+    t(
+        lang,
+        "plugin.already_latest",
+        &[("name", name), ("ver", ver)],
+    )
+}
+
+#[must_use]
+pub fn plugin_removed(lang: Lang, name: &str) -> String {
+    t(lang, "plugin.removed", &[("name", name)])
+}
+
+#[must_use]
+pub fn plugin_not_installed(lang: Lang, name: &str) -> String {
+    t(lang, "plugin.not_installed", &[("name", name)])
+}
+
+#[must_use]
+pub fn plugin_install_failed(lang: Lang, name: &str, reason: &str) -> String {
+    t(
+        lang,
+        "plugin.install_failed",
+        &[("name", name), ("reason", reason)],
+    )
+}
+
+#[must_use]
+pub fn plugin_update_failed(lang: Lang, name: &str, reason: &str) -> String {
+    t(
+        lang,
+        "plugin.update_failed",
+        &[("name", name), ("reason", reason)],
+    )
+}
+
+#[must_use]
+pub fn plugin_remove_failed(lang: Lang, name: &str, reason: &str) -> String {
+    t(
+        lang,
+        "plugin.remove_failed",
+        &[("name", name), ("reason", reason)],
+    )
+}
+
+#[must_use]
+pub fn plugin_update_all_summary(
+    lang: Lang,
+    updated: usize,
+    latest: usize,
+    failed: usize,
+) -> String {
+    t(
+        lang,
+        "plugin.update_all_summary",
+        &[
+            ("updated", &updated.to_string()),
+            ("latest", &latest.to_string()),
+            ("failed", &failed.to_string()),
+        ],
+    )
+}
+
+#[must_use]
+pub fn plugin_autoremove_summary(lang: Lang, count: usize) -> String {
+    t(
+        lang,
+        "plugin.autoremove_summary",
+        &[("count", &count.to_string())],
+    )
+}
+
+#[must_use]
+pub fn plugin_autoremove_removed(lang: Lang, name: &str, days_ago: u64) -> String {
+    t(
+        lang,
+        "plugin.autoremove_removed",
+        &[("name", name), ("days_ago", &days_ago.to_string())],
+    )
+}
+
+#[must_use]
+pub fn plugin_list_header(lang: Lang) -> String {
+    t(lang, "plugin.list_header", &[])
+}
+
+#[must_use]
+pub fn plugin_list_empty(lang: Lang) -> String {
+    t(lang, "plugin.list_empty", &[])
+}
+
+#[must_use]
+pub fn plugin_fetch_manifest_failed(lang: Lang, name: &str, reason: &str) -> String {
+    t(
+        lang,
+        "plugin.fetch_manifest_failed",
+        &[("name", name), ("reason", reason)],
+    )
+}
+
+#[must_use]
+pub fn plugin_manifest_not_found(lang: Lang, name: &str) -> String {
+    t(lang, "plugin.manifest_not_found", &[("name", name)])
+}
+
+#[must_use]
+pub fn plugin_abi_mismatch(lang: Lang, name: &str, expected: u32, actual: u32) -> String {
+    t(
+        lang,
+        "plugin.abi_mismatch",
+        &[
+            ("name", name),
+            ("expected", &expected.to_string()),
+            ("actual", &actual.to_string()),
+        ],
+    )
+}
+
+#[must_use]
+pub fn plugin_dyyl_min_unmet(lang: Lang, name: &str, required: &str, current: &str) -> String {
+    t(
+        lang,
+        "plugin.dyyl_min_unmet",
+        &[("name", name), ("required", required), ("current", current)],
+    )
+}
+
+#[must_use]
+pub fn plugin_platform_unavailable(
+    lang: Lang,
+    name: &str,
+    platform: &str,
+    available: &str,
+) -> String {
+    t(
+        lang,
+        "plugin.platform_unavailable",
+        &[
+            ("name", name),
+            ("platform", platform),
+            ("available", available),
+        ],
+    )
+}
+
+#[must_use]
+pub fn plugin_sha256_mismatch(lang: Lang, name: &str) -> String {
+    t(lang, "plugin.sha256_mismatch", &[("name", name)])
+}
+
+#[must_use]
+pub fn plugin_download_failed(lang: Lang, name: &str, reason: &str) -> String {
+    t(
+        lang,
+        "plugin.download_failed",
+        &[("name", name), ("reason", reason)],
+    )
+}
+
+#[must_use]
+pub fn plugin_dlopen_failed(lang: Lang, name: &str, reason: &str) -> String {
+    t(
+        lang,
+        "plugin.dlopen_failed",
+        &[("name", name), ("reason", reason)],
+    )
+}
+
+#[must_use]
+pub fn plugin_symbol_missing(lang: Lang, name: &str, symbol: &str) -> String {
+    t(
+        lang,
+        "plugin.symbol_missing",
+        &[("name", name), ("symbol", symbol)],
+    )
+}
+
+#[must_use]
+pub fn plugin_init_failed(lang: Lang, name: &str) -> String {
+    t(lang, "plugin.init_failed", &[("name", name)])
+}
+
+#[must_use]
+pub fn plugin_on_load_failed(lang: Lang, name: &str, code: i32) -> String {
+    t(
+        lang,
+        "plugin.on_load_failed",
+        &[("name", name), ("code", &code.to_string())],
+    )
+}
+
+#[must_use]
+pub fn plugin_unknown_subcommand(lang: Lang, name: &str, sub: &str) -> String {
+    t(
+        lang,
+        "plugin.unknown_subcommand",
+        &[("name", name), ("sub", sub)],
+    )
+}
+
+#[must_use]
+pub fn plugin_arity_mismatch(
+    lang: Lang,
+    name: &str,
+    sub: &str,
+    expected: usize,
+    actual: usize,
+) -> String {
+    t(
+        lang,
+        "plugin.arity_mismatch",
+        &[
+            ("name", name),
+            ("sub", sub),
+            ("expected", &expected.to_string()),
+            ("actual", &actual.to_string()),
+        ],
+    )
+}
+
+#[must_use]
+pub fn plugin_command_failed(lang: Lang, name: &str, sub: &str, code: &str) -> String {
+    t(
+        lang,
+        "plugin.command_failed",
+        &[("name", name), ("sub", sub), ("code", code)],
+    )
+}
+
+#[must_use]
+pub fn plugin_panic_warning(lang: Lang, name: &str) -> String {
+    t(lang, "plugin.panic_warning", &[("name", name)])
+}
+
+// ── CLI plugin subcommand messages ──────────────────────────────────
+
+#[must_use]
+pub fn cli_plugin_usage(lang: Lang) -> String {
+    t(lang, "cli.plugin_usage", &[])
+}
+
+#[must_use]
+pub fn cli_plugin_subcommand_unknown(lang: Lang, sub: &str) -> String {
+    t(lang, "cli.plugin_subcommand_unknown", &[("sub", sub)])
 }
 
 // ── Tests ────────────────────────────────────────────────────────────
