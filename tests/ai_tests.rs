@@ -338,3 +338,30 @@ fn parse_response_empty_json_object() {
     let values = parse_response(body).expect("parse");
     assert!(values.is_empty());
 }
+
+// ── Task 9: ai.auto.filled command handler tests ───────────────────
+
+use dyyl::runtime::execute::run_script;
+use dyyl::runtime::Value;
+
+#[test]
+fn ai_auto_filled_returns_string_value() {
+    let v = run_script("set $x, ai.auto.filled _, \"hello\"\nio.out $x", false).values;
+    assert_eq!(v[1], Value::Str("hello".to_string()));
+}
+
+#[test]
+fn ai_auto_filled_number_returns_num() {
+    let v = run_script("set $x, ai.auto.filled _, 42\nio.out $x", false).values;
+    assert_eq!(v[1], Value::Num(42));
+}
+
+#[test]
+fn ai_auto_filled_with_hint_ignores_hint() {
+    let v = run_script(
+        "set $x, ai.auto.filled \"some hint\", \"value\"\nio.out $x",
+        false,
+    )
+    .values;
+    assert_eq!(v[1], Value::Str("value".to_string()));
+}

@@ -79,6 +79,14 @@ pub(super) fn known_arity(command: &str) -> Option<usize> {
         "time.add" => 2,
         "time.wait" => 1,
 
+        // ai.* commands
+        // ai.ask: [system], <prompt> — registered as 2 (max); the handler
+        // treats a single arg as "use default system prompt".
+        "ai.ask" => 2,
+        // ai.auto.filled: <hint>, <value> — exactly 2 args (hint ignored at
+        // runtime, value returned verbatim).
+        "ai.auto.filled" => 2,
+
         _ => return None,
     };
     Some(arity)

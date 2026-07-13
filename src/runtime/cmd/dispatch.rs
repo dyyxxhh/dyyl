@@ -3,6 +3,7 @@
 //! `eval_expr` lives here because it recursively calls `dispatch_call`
 //! for nested command expressions (circular dependency).
 
+use super::ai;
 use super::containers;
 use super::context::ExecContext;
 use super::file;
@@ -39,6 +40,8 @@ pub(crate) fn dispatch_call(
             let sub = &cmd["logic.".len()..];
             logic::dispatch_logic(call, env, ctx, sub)
         }
+
+        cmd if cmd.starts_with("ai.") => ai::handle_ai_command(call, env, ctx),
 
         cmd if cmd.starts_with("str.") => str::handle_str_command(call, env, ctx),
 
