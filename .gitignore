@@ -6,7 +6,9 @@
 /.playwright-mcp/
 
 # Local build artifacts
-/dist/
+/dist/*
+# ...but track published plugin distribution files (served by server.js)
+!/dist/plugins/
 
 # Runtime/local artifacts
 *.log

@@ -1,0 +1,14 @@
+{
+  "name": "example",
+  "version": "0.1.0",
+  "abi_version": 1,
+  "dyyl_min": "0.2.0",
+  "panic_mode": "abort",
+  "commands": [
+    {"name": "greet", "arity": 1, "brief": "Send a greeting"},
+    {"name": "math.double", "arity": 1, "brief": "Double a number"}
+  ],
+  "platforms": [
+    {"platform": "linux-x86_64", "url": "https://l.dyyapp.com/plugins/example/0.1.0/linux-x86_64/libexample.so", "sha256": "0c29335edd1d6ffb62176a7a00f6be11293e9dbd97a1400a32cb3608dd74f381"}
+  ]
+}

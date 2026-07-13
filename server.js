@@ -5,6 +5,7 @@ const path = require('path');
 const PORT = 8951;
 const DIST_DIR = path.join(__dirname, 'dist');
 const BINARY_PATH = path.join(DIST_DIR, 'dyyl');
+const PLUGIN_DIST_DIR = path.join(DIST_DIR, 'plugins');
 
 const INSTALL_SCRIPT = `#!/bin/bash
 set -e
@@ -67,6 +68,62 @@ const server = http.createServer((req, res) => {
             'Content-Disposition': 'attachment; filename="dyyl"'
         });
         fs.createReadStream(BINARY_PATH).pipe(res);
+        return;
+    }
+
+    // ── Plugin distribution routes ───────────────────────────────────
+    // GET /plugins/<name>/manifest.json
+    // GET /plugins/<name>/<version>/<platform>/<filename>
+    const reqPath = (req.url || '').split('?')[0];
+
+    // /plugins/<name>/manifest.json
+    const manifestMatch = reqPath.match(/^\/plugins\/([^/]+)\/manifest\.json$/);
+    if (manifestMatch) {
+        const name = manifestMatch[1];
+        if (name.includes('..')) {
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'invalid path' }));
+            return;
+        }
+        const manifestPath = path.join(PLUGIN_DIST_DIR, name, 'manifest.json');
+        if (!fs.existsSync(manifestPath)) {
+            res.writeHead(404);
+            res.end(JSON.stringify({ error: 'plugin not found' }));
+            return;
+        }
+        const data = fs.readFileSync(manifestPath);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(data);
+        return;
+    }
+
+    // /plugins/<name>/<version>/<platform>/<filename>
+    const fileMatch = reqPath.match(/^\/plugins\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/);
+    if (fileMatch) {
+        const [, name, version, platform, filename] = fileMatch;
+        // Prevent path traversal.
+        if ([name, version, platform, filename].some((s) => s.includes('..'))) {
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'invalid path' }));
+            return;
+        }
+        const filePath = path.join(PLUGIN_DIST_DIR, name, version, platform, filename);
+        if (!fs.existsSync(filePath)) {
+            res.writeHead(404);
+            res.end(JSON.stringify({ error: 'file not found' }));
+            return;
+        }
+        const stat = fs.statSync(filePath);
+        if (!stat.isFile()) {
+            res.writeHead(404);
+            res.end(JSON.stringify({ error: 'file not found' }));
+            return;
+        }
+        res.writeHead(200, {
+            'Content-Type': 'application/octet-stream',
+            'Content-Length': stat.size,
+        });
+        fs.createReadStream(filePath).pipe(res);
         return;
     }
 
