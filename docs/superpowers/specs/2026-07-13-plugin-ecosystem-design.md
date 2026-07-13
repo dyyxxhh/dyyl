@@ -16,6 +16,7 @@
 - 插件以动态库（.so/.dll/.dylib）形式分发，由 Rust 等编译型语言编写，通过 C ABI 与 dyyl 通信。
 - 设计须支持"将来把内置命令迁移到插件"，迁移后调用体验与内置几乎无差别。
 - dyyl 自带的开发服务器 `server.js` 须扩展支持插件分发路由，路径结构与生产 `l.dyyapp.com` 一致，便于本地开发与测试。
+- 提供 CLI 子命令管理插件生命周期：`dyyl install <name>` / `dyyl update <name>` / `dyyl update` / `dyyl remove <name>` / `dyyl autoremove`。
 
 ### 1.2 非目标（v1）
 
@@ -24,7 +25,7 @@
 - 不做插件 panic 跨 FFI 隔离；仅文档警告 UB 风险。
 - 不做版本锁定 / 锁文件；始终使用 latest。
 - 不做权限/能力沙箱；插件拥有 dyyl 同等权限。
-- 不实现 `plugin.install` 显式命令或脚本头声明语法。
+- 不实现脚本内 `plugin.install` 命令（管理操作只通过 CLI 子命令，不混入脚本语法）。
 
 ---
 
@@ -46,6 +47,8 @@
 | 生命周期 | 首次调用 dlopen，常驻到脚本结束 |
 | 平台分发 | 清单含多平台条目 |
 | 错误模型 | 返回码 + out JSON，与现有 RuntimeError 对齐 |
+| CLI 管理子命令 | `install`/`update`/`remove`/`autoremove`，与 `--flag <filename>` 模式互斥 |
+| 插件使用追踪 | config 记录每个插件的 `last_used_at`，autoremove 据此清理 30 天未用 |
 
 ---
 
@@ -60,16 +63,21 @@ src/runtime/plugin/
   registry.rs     — 已装插件注册表（扫描 XDG data 目录）
   abi.rs          — C ABI 类型与 extern "C" 签名
   loader.rs       — dlopen + 符号解析 + 调用
-  fetch.rs        — 从 l.dyyapp.com 拉清单+产物+SHA256 校验
-  store.rs        — 存储路径管理（XDG data）
+  fetch.rs        — 从 l.dyyapp.com 拉清单+产物+SHA256 校验（运行时与 CLI 共用）
+  store.rs        — 存储路径管理（XDG data，运行时与 CLI 共用）
 src/runtime/cmd/plugin.rs — 路由未知前缀到 PluginManager
+src/cli/
+  mod.rs          — CLI 子命令分发
+  plugin_cmds.rs  — install/update/remove/autoremove/list 实现
 ```
 
 ### 3.2 改动点
 
 - [src/runtime/cmd/dispatch.rs](file:///workspace/src/runtime/cmd/dispatch.rs) 末尾 `_` 分支前加 fallback：命令名含至少一个点号且首段非已知命令族时，按首个点号切分出 `plugin_name` 与 `sub`（可含点号），转交 `plugin::dispatch(plugin_name, sub, call, env, ctx)`。
 - [src/runtime/env.rs](file:///workspace/src/runtime/env.rs) 的 `Env` 增 `plugin_manager: PluginManager` 字段。
-- [src/config.rs](file:///workspace/src/config.rs) 增 `installed_plugins: HashMap<String, InstalledPluginRecord>` 跟踪已装版本，便于将来诊断与升级提示。
+- [src/config.rs](file:///workspace/src/config.rs) 增 `installed_plugins: HashMap<String, InstalledPluginRecord>` 跟踪已装版本、`installed_at`、`last_used_at`、`sha256`。
+- [src/main.rs](file:///workspace/src/main.rs) 增子命令分发：首参为 `install`/`update`/`remove`/`autoremove`/`list` 时走 CLI 管理路径，否则保持现有 `--flag <filename>` 行为。
+- 新增 `src/cli/plugin_cmds.rs`：CLI 子命令实现，复用 `runtime/plugin/fetch.rs` + `store.rs`。
 
 ### 3.3 首次调用数据流
 
@@ -438,9 +446,126 @@ manifest.json 中的 `url` 字段在开发环境指向 `http://localhost:8951/pl
 
 ---
 
-## 9. 测试策略
+## 9. CLI 子命令（插件管理）
 
-### 9.1 测试分层
+### 9.1 子命令总览
+
+`dyyl` CLI 新增"管理子命令"模式，与现有 `--flag <filename>` 脚本执行模式互斥。CLI 解析顺序：第一个位置参数若是已知子命令（`install`/`update`/`remove`/`autoremove`/`list`），走管理路径；否则按现有逻辑当 `<filename>`。
+
+| 子命令 | 用途 | 用法 |
+|---|---|---|
+| `dyyl install <name>` | 显式下载并安装某插件（不运行脚本） | `dyyl install migpt` |
+| `dyyl update <name>` | 升级某插件到 latest（拉 manifest，版本不同则下载新版本） | `dyyl update migpt` |
+| `dyyl update` | 升级所有已装插件到 latest | `dyyl update` |
+| `dyyl remove <name>` | 卸载某插件（删本地目录 + 清 config 记录） | `dyyl remove migpt` |
+| `dyyl autoremove` | 卸载所有 `last_used_at` 超过 30 天的插件 | `dyyl autoremove` |
+| `dyyl list` | 列出已装插件及版本 | `dyyl list` |
+
+`list` 是辅助子命令，便于查看状态。`--lang` 仍可在子命令前使用以选择输出语言。
+
+### 9.2 install 行为
+
+1. 从 `https://l.dyyapp.com/plugins/<name>/manifest.json` 拉 manifest
+2. 兼容性 gate（§5.4）：abi_version、dyyl_min、当前平台条目
+3. 下载产物到临时文件 + SHA256 校验
+4. 原子安装到 `~/.local/share/dyyl/plugins/<name>/<version>/`
+5. 写本地 plugin.toml 副本 + 更新 config.toml 的 `installed_plugins.<name>` 记录（含 `installed_at` 与 `last_used_at`，见 §9.6）
+6. 输出：`installed migpt 0.1.0` 或失败原因到 stderr，退出码 0/非 0
+
+**幂等**：若已装且版本与 manifest 一致，输出 `migpt 0.1.0 already installed`，退出 0。若已装但版本不同，按 update 行为升级。
+
+### 9.3 update 行为
+
+**单插件 `dyyl update <name>`：**
+
+1. config 命中已装？否 → `error: <name> not installed`，退出非 0
+2. 拉 manifest，校验
+3. manifest.version == 本地版本 → `<name> already latest (0.1.0)`，退出 0
+4. 不同 → 下载新版本到新目录，更新 config 记录，**保留旧版本目录**（v1，见 §11 开放问题）
+5. 输出：`updated migpt 0.1.0 -> 0.2.0`
+
+**全部 `dyyl update`：**
+
+1. 遍历 config.installed_plugins
+2. 对每个插件执行单插件 update 逻辑
+3. 汇总输出：每个插件一行结果，最后总结 `updated N, already-latest M, failed K`
+4. 任一失败不影响其它继续；最终退出码：全成功 0，有失败非 0
+
+### 9.4 remove 行为
+
+1. config 命中已装？否 → `error: <name> not installed`，退出非 0
+2. 删除 `~/.local/share/dyyl/plugins/<name>/` 整个插件目录（含所有版本）
+3. 从 config.toml 删 `installed_plugins.<name>` 记录
+4. 输出：`removed migpt`
+5. 不删除当前已加载到运行中的进程的插件（remove 是离线操作；运行中脚本不受影响）
+
+### 9.5 autoremove 行为
+
+1. 遍历 config.installed_plugins
+2. 对每个插件：若 `last_used_at` 距今 > 30 天，按 remove 流程卸载
+3. `last_used_at` 缺失（旧版本安装的记录无此字段）→ 视为从未使用，立即清理
+4. 输出：每个被清理的插件一行 `removed migpt (last used 45 days ago)`，最后总结 `autoremoved N plugins`
+5. 退出码 0
+
+**"30 天"阈值**：常量 `AUTOREMOVE_DAYS = 30`，硬编码 v1 不配置化。
+
+### 9.6 使用时间戳追踪
+
+`config.toml` 的 `installed_plugins.<name>` 记录新增 `last_used_at` 字段：
+
+```toml
+[installed_plugins.migpt]
+version = "0.1.0"
+installed_at = "2026-07-13T10:30:00Z"
+last_used_at = "2026-07-13T14:20:00Z"   # 每次脚本运行中调用该插件时更新
+sha256 = "abc..."
+```
+
+**更新时机**：脚本运行时，PluginManager 首次成功加载某插件 handle 后，写 `last_used_at = now()` 到 config。同一脚本内多次调用同一插件只更新一次（首次加载时）。
+
+**时间格式**：RFC 3339 UTC（与 `installed_at` 一致），用 `chrono` crate（已是依赖）。
+
+### 9.7 list 行为
+
+输出表格：
+
+```
+NAME        VERSION   LAST USED         INSTALLED
+migpt       0.1.0     2026-07-13 14:20  2026-07-13 10:30
+example     0.2.0     2026-07-10 09:00  2026-07-08 18:00
+```
+
+`last_used_at` 缺失显示 `-`。退出码 0。
+
+### 9.8 CLI 解析逻辑（main.rs 改动）
+
+```rust
+// 伪代码
+let first = args.get(1);
+match first.map(String::as_str) {
+    Some("install") if args.len() == 3 => cli_plugin_install(&args[2], lang),
+    Some("update") if args.len() == 2 => cli_plugin_update_all(lang),
+    Some("update") if args.len() == 3 => cli_plugin_update_one(&args[2], lang),
+    Some("remove") if args.len() == 3 => cli_plugin_remove(&args[2], lang),
+    Some("autoremove") if args.len() == 2 => cli_plugin_autoremove(lang),
+    Some("list") if args.len() == 2 => cli_plugin_list(lang),
+    _ => { /* 现有 --flag <filename> 逻辑 */ }
+}
+```
+
+`--lang` 等全局选项需在子命令之前，例如 `dyyl --lang zh install migpt`。
+
+### 9.9 与脚本运行的关系
+
+CLI 子命令是**离线管理**操作，不运行脚本，不 dlopen 插件。它们只操作文件系统与 config。
+
+脚本运行时的"首次调用惰性下载"（§3.3）仍保留——即使没显式 `install`，脚本调用未装插件也会自动下载。两条路径共享同一套 fetch/install/store 实现（§10 实现顺序的 `fetch.rs` + `store.rs` 被 CLI 与运行时共同调用）。
+
+---
+
+## 10. 测试策略
+
+### 10.1 测试分层
 
 | 层 | 目的 | 工具 |
 |---|---|---|
@@ -449,8 +574,9 @@ manifest.json 中的 `url` 字段在开发环境指向 `http://localhost:8951/pl
 | 协议（manifest/SHA256） | 解析、校验、平台选择 | 单元 + JSON fixture |
 | 错误模型 | 与内置 RuntimeError 对齐 | 单元 + golden fixture |
 | 迁移对称性 | 验证"内置→插件几乎无差别" | 对照测试 |
+| CLI 子命令 | install/update/remove/autoremove/list | `cargo test` + 本地 HTTP server + tempdir |
 
-### 9.2 测试用插件 fixture
+### 10.2 测试用插件 fixture
 
 `tests/fixtures/plugins/example/` 下放一个最小 Rust cdylib crate，导出 14 个 ABI 符号。`handle_command` 实现三个命令：
 
@@ -460,7 +586,7 @@ manifest.json 中的 `url` 字段在开发环境指向 `http://localhost:8951/pl
 
 构建脚本 `tests/fixtures/plugins/example/build.sh` 在测试前 `cargo build --release`，产物 `libexample.so` 放到 tmpdir。集成测试 `dlopen` 它。
 
-### 9.3 关键测试用例（最少集）
+### 10.3 关键测试用例（最少集）
 
 **manifest.rs**
 
@@ -512,44 +638,67 @@ manifest.json 中的 `url` 字段在开发环境指向 `http://localhost:8951/pl
 - sentinel 与内置命令失败 sentinel 同形
 - golden fixture `tests/fixtures/plugin-error.dyyl` 验证 stderr 输出格式
 
-### 9.4 不测的（明确边界）
+**CLI 子命令**（用本地 HTTP server + tempdir 模拟 HOME 与 l.dyyapp.com）
+
+- `dyyl install migpt` → 产物落到 tempdir 的 XDG data，config 写入记录，退出 0
+- `dyyl install migpt`（已装同版本）→ 输出 `already installed`，退出 0，不重复下载
+- `dyyl install migpt`（已装旧版本）→ 升级到新版本，输出 `updated`
+- `dyyl install unknown`（manifest 404）→ 输出错误，退出非 0
+- `dyyl update migpt`（已是 latest）→ `already latest`，退出 0
+- `dyyl update migpt`（有新版本）→ 升级，退出 0
+- `dyyl update migpt`（未装）→ 错误，退出非 0
+- `dyyl update`（多个已装，混合 already/latest/failed）→ 汇总输出正确，退出码符合 K>0 时非 0
+- `dyyl remove migpt` → 目录删除 + config 记录删除，退出 0
+- `dyyl remove unknown`（未装）→ 错误，退出非 0
+- `dyyl autoremove`（有 > 30 天、有 < 30 天、有 last_used_at 缺失三种）→ 只清理前两种 + 缺失的，输出天数
+- `dyyl list`（空、有插件、有缺失 last_used_at 的）→ 表格输出正确
+- `last_used_at` 更新：脚本运行中首次加载插件后 config 记录被刷新（用 mock 时间或检查时间戳非空）
+- `--lang zh install migpt` → 子命令前全局选项生效，输出中文
+
+### 10.4 不测的（明确边界）
 
 - 不测真 panic 跨 FFI UB（无法安全复现，仅文档警告）
 - 不测外网 `l.dyyapp.com`（用本地 HTTP server 替代）
 - 不测 Windows/macOS 实际加载（CI 仅 Linux，其它平台靠平台条目选择逻辑单测覆盖）
 - 不测 cdylib 跨 Rust 版本兼容（文档声明 ABI 锁定，dyyl 升 API 版本时才允许破坏）
+- 不测 autoremove 的真实 30 天等待（用直接构造过期 last_used_at 的 config fixture）
 
-### 9.5 与现有测试套件集成
+### 10.5 与现有测试套件集成
 
 - `cargo test` 一键跑全部，包括新插件测试
-- 新增 `tests/plugin_tests.rs` 集成测试入口
+- 新增 `tests/plugin_tests.rs` 集成测试入口（含运行时与 CLI 两组用例）
+- 新增 `tests/cli_plugin_tests.rs` 或合入 `plugin_tests.rs`，专测 CLI 子命令
 - 新增 `tests/fixtures/plugin-*.dyyl` golden 脚本
-- `cargo fmt --check` + `cargo clippy --all-targets --all-features` 必须通过（项目 lint 严格，`unwrap_used`/`panic`/`indexing_slicing` 全 deny，插件代码也需遵守）
+- `cargo fmt --check` + `cargo clippy --all-targets --all-features` 必须通过（项目 lint 严格，`unwrap_used`/`panic`/`indexing_slicing` 全 deny，插件代码与 CLI 代码也需遵守）
 
 ---
 
-## 10. 实现顺序（高层，详细计划由 writing-plans 产出）
+## 11. 实现顺序（高层，详细计划由 writing-plans 产出）
 
 1. ABI 类型与签名（`abi.rs`）——纯类型，无副作用
 2. manifest 解析（`manifest.rs`）——纯解析，可单测
 3. store 路径管理（`store.rs`）——纯路径计算
 4. registry（`registry.rs`）——扫已装目录
 5. loader（`loader.rs`）——dlopen + 调用，需测试 fixture
-6. fetch（`fetch.rs`）——HTTP + SHA256，用本地 server 测
-7. PluginManager（`mod.rs`）——编排上述模块
+6. fetch（`fetch.rs`）——HTTP + SHA256，用本地 server 测；**被运行时与 CLI 共用**
+7. PluginManager（`mod.rs`）——编排上述模块；首次加载成功后写 `last_used_at`
 8. dispatch fallback（`cmd/plugin.rs` + 改 dispatch.rs）——含多级命令切分
-9. config 扩展（`config.rs`）
-10. 测试 fixture 与集成测试（含多级命令用例）
-11. server.js 扩展（新增 `/plugins/...` 路由）
-12. 发布脚本 `scripts/publish-plugin.sh`
-13. 文档（README + dyyl-api-reference.md 增"插件系统"章节，含 UB 风险警告与多级命令说明）
+9. config 扩展（`config.rs`）——增 `installed_plugins` + `last_used_at` 字段
+10. CLI 子命令（`src/cli/plugin_cmds.rs` + 改 `main.rs`）——install/update/remove/autoremove/list，复用 fetch/store
+11. 测试 fixture 与集成测试（含多级命令与 CLI 子命令用例）
+12. server.js 扩展（新增 `/plugins/...` 路由）
+13. 发布脚本 `scripts/publish-plugin.sh`
+14. 文档（README + dyyl-api-reference.md 增"插件系统"章节，含 UB 风险警告、多级命令说明、CLI 子命令用法）
 
 ---
 
-## 11. 开放问题（实现时再决）
+## 12. 开放问题（实现时再决）
 
-- `plugin.help`、`plugin.list`、`plugin.remove` 等管理命令是否 v1 实现？当前 spec 不包含，但 dispatch fallback 已留扩展点。
-- 升级时旧版本目录是否自动清理？v1 可保留，避免回滚需求；后续可加 GC。
+- `plugin.help`、`plugin.search` 等脚本内管理命令是否 v1 实现？当前 spec 不包含，CLI 子命令已覆盖管理需求。
+- 升级时旧版本目录是否自动清理？v1 保留（remove 是整插件目录全删；update 旧版本保留以备回滚），后续可加 GC。
 - `dyyl_min` 的版本比较是 SemVer 严格比较还是字符串比较？实现时选 SemVer（引入 `semver` crate）。
 - 多级命令的 `cmd_name` 传给插件时是否包含插件名前缀？当前 spec 决定**不包含**（插件收到的就是 `user.login` 而非 `migpt.user.login`）。若插件需要完整路径可从 `on_load` 时收到的元数据自取，但 v1 不传。
 - 插件名是否允许含点号？当前 spec 假设插件名是单段标识符（无点号），首个点号即分隔符。若未来需支持带点号的插件名，需引入转义或显式声明机制——v1 不支持。
+- `dyyl update` 是否应并行下载多个插件？v1 串行实现简单，后续可加并发。
+- `autoremove` 的 30 天阈值是否可配置？v1 硬编码，未来可加 `dyyl config autoremove.days N`。
+- `dyyl install` 是否支持一次装多个（`dyyl install a b c`）？v1 只支持单个，后续可扩展。
