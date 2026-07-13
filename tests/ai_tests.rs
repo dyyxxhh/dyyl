@@ -288,3 +288,53 @@ fn anthropic_omits_system_when_empty() {
     let body: serde_json::Value = serde_json::from_str(&req.body).expect("json");
     assert!(body.get("system").is_none() || body["system"].as_str() == Some(""));
 }
+
+// ── Task 8: batch prompt construction + response parsing tests ─────
+
+use dyyl::ai::prompt::{build_batch, parse_response, Placeholder};
+
+#[test]
+fn build_batch_marks_placeholders_with_ids() {
+    let content = "set $port, ai.auto \"端口常用25565\"\nset $name, ai.auto\n";
+    let placeholders = vec![
+        Placeholder { id: 1, line: 1, hint: Some("端口常用25565".to_string()), original_text: "ai.auto \"端口常用25565\"".to_string() },
+        Placeholder { id: 2, line: 2, hint: None, original_text: "ai.auto".to_string() },
+    ];
+    let (system, user) = build_batch(content, &placeholders);
+    assert!(system.contains("filling placeholder values"));
+    assert!(user.contains("<<<AUTO_1: 端口常用25565>>>"));
+    assert!(user.contains("<<<AUTO_2: (no hint, infer from position)>>>"));
+    assert!(user.contains("set $port, <<<AUTO_1"));
+}
+
+#[test]
+fn parse_response_extracts_typed_values() {
+    let body = r#"{"1":{"type":"string","value":"Steve"},"2":{"type":"number","value":25565}}"#;
+    let values = parse_response(body).expect("parse");
+    assert_eq!(values.len(), 2);
+    assert_eq!(values.get("1").unwrap().value, "Steve");
+    assert_eq!(values.get("1").unwrap().is_number, false);
+    assert_eq!(values.get("2").unwrap().value, "25565");
+    assert_eq!(values.get("2").unwrap().is_number, true);
+}
+
+#[test]
+fn parse_response_strips_markdown_code_fence() {
+    let body = "```json\n{\"1\":{\"type\":\"string\",\"value\":\"x\"}}\n```";
+    let values = parse_response(body).expect("parse");
+    assert_eq!(values.get("1").unwrap().value, "x");
+}
+
+#[test]
+fn parse_response_extracts_json_from_surrounding_text() {
+    let body = "Here are the values:\n{\"1\":{\"type\":\"number\",\"value\":42}}\nDone.";
+    let values = parse_response(body).expect("parse");
+    assert_eq!(values.get("1").unwrap().value, "42");
+}
+
+#[test]
+fn parse_response_empty_json_object() {
+    let body = "{}";
+    let values = parse_response(body).expect("parse");
+    assert!(values.is_empty());
+}
