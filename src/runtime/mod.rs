@@ -10,6 +10,7 @@ pub mod error;
 pub mod execute;
 pub mod host_provider;
 pub mod io_provider;
+pub mod plugin;
 pub mod value;
 
 pub use self::env::Env;
