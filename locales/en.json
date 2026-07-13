@@ -92,5 +92,14 @@
   "plugin.unknown_subcommand": "plugin '{name}' has no command '{sub}'",
   "plugin.arity_mismatch": "plugin command '{name}.{sub}' expects {expected} args, got {actual}",
   "plugin.command_failed": "plugin command '{name}.{sub}' failed: {code}",
-  "plugin.panic_warning": "warning: plugin '{name}' panicked; behavior is undefined (panic_mode not isolated)"
+  "plugin.panic_warning": "warning: plugin '{name}' panicked; behavior is undefined (panic_mode not isolated)",
+
+  "ai.credential_prompt_header": "[dyyl] AI credentials not configured. Please enter:",
+  "ai.credential_prompt_provider": "Provider (1=openai-chat, 2=openai-response, 3=anthropic):",
+  "ai.credential_saved": "[dyyl] Credentials saved to {path}",
+  "ai.ask_failed": "ai.ask failed: {reason}",
+  "ai.prepass_failed": "prepass failed: {reason}",
+  "ai.credential_aborted": "credential input aborted",
+  "logic.end_without_open": "logic.end without open block",
+  "logic.unclosed_block": "unclosed block at line {line}"
 }

@@ -56,3 +56,43 @@ fn plugin_credentials_roundtrip() {
         Some(&"ghp_x".to_string())
     );
 }
+
+#[test]
+fn prompt_ai_reads_all_fields_from_lines() {
+    use dyyl::credentials::prompt_ai_from_lines;
+    let lines = vec![
+        "1".to_string(),
+        "sk-abc".to_string(),
+        "gpt-4o".to_string(),
+        "".to_string(),
+    ];
+    let (creds, consumed) = prompt_ai_from_lines(&lines).expect("prompt");
+    assert_eq!(consumed, 4);
+    assert_eq!(
+        creds.provider,
+        dyyl::credentials::AiProviderKind::OpenaiChat
+    );
+    assert_eq!(creds.api_key, "sk-abc");
+    assert_eq!(creds.model, "gpt-4o");
+    assert!(creds.base_url.is_empty());
+}
+
+#[test]
+fn prompt_ai_invalid_choice_returns_error() {
+    use dyyl::credentials::prompt_ai_from_lines;
+    let lines = vec!["9".to_string()];
+    let result = prompt_ai_from_lines(&lines);
+    assert!(result.is_err());
+}
+
+#[test]
+fn prompt_ai_empty_api_key_returns_error() {
+    use dyyl::credentials::prompt_ai_from_lines;
+    let lines = vec![
+        "1".to_string(),
+        "".to_string(),
+        "model".to_string(),
+        "".to_string(),
+    ];
+    assert!(prompt_ai_from_lines(&lines).is_err());
+}

@@ -161,3 +161,107 @@ fn escape_toml(s: &str) -> String {
         .replace('"', "\\\"")
         .replace('\n', "\\n")
 }
+
+use crate::i18n::{self, Lang};
+
+/// 从预读的输入行列表解析 AI 凭证。
+///
+/// 行顺序：provider 选择（1/2/3）、api_key、model、base_url（空行=默认）。
+/// 返回 (凭证, 消耗的行数)。供测试与实际提示流程共用。
+pub fn prompt_ai_from_lines(lines: &[String]) -> Result<(AiCredentials, usize), String> {
+    if lines.len() < 4 {
+        return Err("not enough input lines for AI credential prompt".to_string());
+    }
+    let provider_raw = lines.first().map(String::as_str).unwrap_or_default();
+    let choice: u8 = provider_raw
+        .trim()
+        .parse()
+        .map_err(|_| format!("invalid provider choice: '{provider_raw}'"))?;
+    let provider = AiProviderKind::from_choice(choice)
+        .ok_or_else(|| format!("invalid provider choice: {choice}"))?;
+    let api_key = lines
+        .get(1)
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
+    if api_key.is_empty() {
+        return Err("api_key cannot be empty".to_string());
+    }
+    let model = lines
+        .get(2)
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
+    if model.is_empty() {
+        return Err("model cannot be empty".to_string());
+    }
+    let base_url = lines
+        .get(3)
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
+    Ok((
+        AiCredentials {
+            provider,
+            api_key,
+            model,
+            base_url,
+            auto_system_prompt: String::new(),
+        },
+        4,
+    ))
+}
+
+/// 交互式提示用户输入 AI 凭证并保存到 credentials.toml。
+///
+/// 从 stdin 读取，stderr 输出问题。返回加载后的 AiCredentials。
+/// stdin EOF → 返回 Err（调用方中止，退出码 3）。
+pub fn ensure_ai_interactive(path: &Path, lang: Lang) -> Result<AiCredentials, String> {
+    use std::io::{BufRead, Write};
+    eprintln!("{}", i18n::t(lang, "ai.credential_prompt_header", &[]));
+    eprintln!("  {}", i18n::t(lang, "ai.credential_prompt_provider", &[]));
+    let stdin = std::io::stdin();
+    let mut lines = stdin.lock().lines();
+    let provider_line = lines
+        .next()
+        .ok_or_else(|| "credential input aborted".to_string())?
+        .map_err(|e| format!("stdin read error: {e}"))?;
+    eprint!("  API Key: ");
+    let _ = std::io::stderr().flush();
+    let api_key_line = lines
+        .next()
+        .ok_or_else(|| "credential input aborted".to_string())?
+        .map_err(|e| format!("stdin read error: {e}"))?;
+    eprint!("  Model: ");
+    let _ = std::io::stderr().flush();
+    let model_line = lines
+        .next()
+        .ok_or_else(|| "credential input aborted".to_string())?
+        .map_err(|e| format!("stdin read error: {e}"))?;
+    eprint!("  Base URL (空=官方端点): ");
+    let _ = std::io::stderr().flush();
+    let base_url_line = lines
+        .next()
+        .ok_or_else(|| "credential input aborted".to_string())?
+        .map_err(|e| format!("stdin read error: {e}"))?;
+    let inputs = vec![provider_line, api_key_line, model_line, base_url_line];
+    let (creds, _) = prompt_ai_from_lines(&inputs)?;
+    let mut file = CredentialsFile::load(path)?;
+    file.ai = Some(creds.clone());
+    file.save(path)?;
+    eprintln!(
+        "{}",
+        i18n::t(
+            lang,
+            "ai.credential_saved",
+            &[("path", &path.display().to_string())]
+        )
+    );
+    Ok(creds)
+}
+
+/// 加载 AI 凭证；若缺失或不完整则交互式提示。
+pub fn ensure_ai(path: &Path, lang: Lang) -> Result<AiCredentials, String> {
+    let file = CredentialsFile::load(path)?;
+    if let Some(ai) = file.ai {
+        return Ok(ai);
+    }
+    ensure_ai_interactive(path, lang)
+}
