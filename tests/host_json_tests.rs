@@ -98,7 +98,7 @@ mcm.game.choose 1.20.4
 
 #[test]
 fn unknown_command_still_errors_without_host() {
-    let source = "unknown.cmd\n";
+    let source = "unknown_cmd\n";
     let output = run_script(source, false);
     assert_eq!(output.values.len(), 1);
     assert_eq!(output.values[0], Value::Num(-1));

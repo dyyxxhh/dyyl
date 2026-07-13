@@ -43,7 +43,7 @@ fn language_unknown_returns_error() {
 
 #[test]
 fn default_language_is_english() {
-    let output = run_script("unknown.cmd", false);
+    let output = run_script("unknown_cmd", false);
     assert_eq!(output.values.len(), 1);
     assert_eq!(output.values[0], Value::Num(-1));
 }

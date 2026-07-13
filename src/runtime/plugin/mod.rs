@@ -29,6 +29,7 @@ use crate::runtime::plugin::value_codec::{value_from_json, values_to_json_array}
 use crate::runtime::value::Value;
 
 /// Loaded plugin instance — holds the loader and manifest.
+#[derive(Debug)]
 pub struct LoadedPlugin {
     /// The name of the plugin (e.g. "migpt").
     pub name: String,
@@ -39,6 +40,7 @@ pub struct LoadedPlugin {
 }
 
 /// Central plugin manager — holds already-loaded plugins.
+#[derive(Debug)]
 pub struct PluginManager {
     loaded: Mutex<HashMap<String, LoadedPlugin>>,
 }

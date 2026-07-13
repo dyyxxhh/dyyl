@@ -89,7 +89,7 @@ fn undefined_variable_returns_error() {
 
 #[test]
 fn unknown_command_returns_error() {
-    let cmd = parse_one("completely.unknown 1, 2");
+    let cmd = parse_one("completely_unknown 1, 2");
     let ctx = ExecContext::from_command(&cmd, false, default_provider(), Lang::default());
     let result = dispatch_call(&cmd.call, &mut Env::new(), &ctx);
     assert!(result.is_err(), "unknown command should error");
@@ -180,7 +180,7 @@ fn script_with_undefined_var_produces_error() {
 
 #[test]
 fn script_with_unknown_command_produces_sentinel() {
-    let source = "unknown.cmd";
+    let source = "unknown_cmd";
     let commands = crate::parser::parse_source(source).expect("parse");
     let output = run_commands_with_provider(&commands, true, &default_provider());
     assert_eq!(output.values[0], Value::Num(-1));

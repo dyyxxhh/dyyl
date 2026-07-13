@@ -12,6 +12,7 @@ use libloading::Library;
 use crate::runtime::plugin::abi::{symbols, AbiError, DYRL_API_VERSION};
 
 /// Loaded plugin — holds the dlopen'd library and resolved symbols.
+#[derive(Debug)]
 pub struct PluginLoader {
     library: Library,
     handle: *mut c_void,

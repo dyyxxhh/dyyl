@@ -64,11 +64,19 @@ pub(crate) fn dispatch_call(
         "create.num" => vars::handle_create_num(call, env, ctx),
         "create.str" => vars::handle_create_str(call, env, ctx),
 
-        _ => Err(RuntimeError::new(
-            ctx.line,
-            &call.command,
-            i18n::unknown_top_command(ctx.lang.get(), &call.command),
-        )),
+        _ => {
+            // Fallback: if command contains a dot and prefix isn't a known
+            // family, treat as a plugin command (`<name>.<sub>[.<sub>...]`).
+            if call.command.contains('.') {
+                super::plugin::dispatch_plugin_command(&call.command, call, env, ctx)
+            } else {
+                Err(RuntimeError::new(
+                    ctx.line,
+                    &call.command,
+                    i18n::unknown_top_command(ctx.lang.get(), &call.command),
+                ))
+            }
+        }
     }
 }
 

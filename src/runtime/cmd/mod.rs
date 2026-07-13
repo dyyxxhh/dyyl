@@ -16,6 +16,7 @@ pub(crate) mod math;
 pub(crate) mod math_char;
 pub(crate) mod math_hash;
 pub mod net;
+pub(crate) mod plugin;
 pub(crate) mod str;
 pub(crate) mod str_basic;
 pub(crate) mod str_convert;

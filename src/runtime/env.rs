@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use crate::i18n::Lang;
 use crate::runtime::host_provider::{GameChooseScope, HostProvider};
+use crate::runtime::plugin::PluginManager;
 use crate::runtime::value::Value;
 
 /// Global dyyl environment — single scope for all variable bindings.
@@ -23,6 +24,7 @@ pub struct Env {
     host_provider: Option<Arc<dyn HostProvider>>,
     game_scope: GameChooseScope,
     mcm_id_counter: Cell<u64>,
+    plugin_manager: Arc<PluginManager>,
 }
 
 impl Env {
@@ -35,6 +37,7 @@ impl Env {
             host_provider: None,
             game_scope: GameChooseScope::default(),
             mcm_id_counter: Cell::new(1),
+            plugin_manager: Arc::new(PluginManager::new()),
         }
     }
 
@@ -112,6 +115,12 @@ impl Env {
         let id = self.mcm_id_counter.get();
         self.mcm_id_counter.set(id + 1);
         id.to_string()
+    }
+
+    /// Access the plugin manager (shared via `Arc`).
+    #[must_use]
+    pub fn plugin_manager(&self) -> &PluginManager {
+        &self.plugin_manager
     }
 }
 

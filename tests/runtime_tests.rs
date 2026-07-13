@@ -17,7 +17,7 @@ list.create l
 io.out $missing_var
 io.out dict.get(d, nonexistent)
 io.out list.get(l, 0)
-unknown.cmd
+unknown_cmd
 ";
 
     // When: we execute it
@@ -28,7 +28,7 @@ unknown.cmd
     // io.out $missing_var → sentinel
     // io.out dict.get(d, nonexistent) → -1
     // io.out list.get(l, 0) → -1
-    // unknown.cmd → sentinel
+    // unknown_cmd → sentinel
     assert_eq!(output.values.len(), 6, "expected 6 result values");
 
     // Command 0: dict.create d → Empty
@@ -46,7 +46,7 @@ unknown.cmd
     // Command 4: io.out list.get(l, 0) → -1
     assert_eq!(output.values[4], Value::Num(-1), "OOB list.get → -1");
 
-    // Command 5: unknown.cmd → sentinel (Num(-1))
+    // Command 5: unknown_cmd → sentinel (Num(-1))
     assert_eq!(
         output.values[5],
         Value::Num(-1),
@@ -60,7 +60,7 @@ unknown.cmd
 #[test]
 fn debug_mode_prints_warnings() {
     // Given: a script with known errors
-    let source = "unknown.cmd\n";
+    let source = "unknown_cmd\n";
 
     // When: executing with debug=true
     let output = run_script(source, true);
