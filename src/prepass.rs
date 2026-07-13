@@ -183,3 +183,73 @@ fn escape_dyyl_string(s: &str) -> String {
         .replace('\n', "\\n");
     format!("\"{escaped}\"")
 }
+
+use crate::ai::prompt::{build_batch, parse_response};
+use crate::credentials;
+use crate::i18n::Lang;
+use std::path::Path;
+
+/// 预扫描错误。
+#[derive(Debug)]
+pub enum PrepassError {
+    Io(String),
+    AiFailed(String),
+    ParseFailed(String),
+    CredentialAborted,
+}
+
+impl std::fmt::Display for PrepassError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(s) => write!(f, "io error: {s}"),
+            Self::AiFailed(s) => write!(f, "ai request failed: {s}"),
+            Self::ParseFailed(s) => write!(f, "parse failed: {s}"),
+            Self::CredentialAborted => write!(f, "credential input aborted"),
+        }
+    }
+}
+
+impl std::error::Error for PrepassError {}
+
+/// 预扫描入口：检测未填 ai.auto → 批量请求 → 回写。
+///
+/// credentials path 从 `DYYL_CREDENTIALS_PATH` 环境变量读，若未设则用默认路径。
+/// 无未填占位符时直接返回 Ok。
+pub fn run(file: &Path, lang: Lang) -> Result<(), PrepassError> {
+    let content = std::fs::read_to_string(file)
+        .map_err(|e| PrepassError::Io(format!("read {}: {e}", file.display())))?;
+    let placeholders = scan_placeholders(&content);
+    if placeholders.is_empty() {
+        return Ok(());
+    }
+    let creds_path = match std::env::var("DYYL_CREDENTIALS_PATH") {
+        Ok(p) => std::path::PathBuf::from(p),
+        Err(_) => credentials::CredentialsFile::default_path()
+            .ok_or_else(|| PrepassError::AiFailed("no config dir".to_string()))?,
+    };
+    let ai_creds = credentials::ensure_ai(&creds_path, lang)
+        .map_err(|_| PrepassError::CredentialAborted)?;
+    let provider = crate::ai::build_provider(&ai_creds);
+    let (system, user_prompt) = build_batch(&content, &placeholders);
+    let response = provider
+        .ask(&system, &user_prompt)
+        .map_err(|e| PrepassError::AiFailed(e.to_string()))?;
+    let values = parse_response(&response)
+        .map_err(|e| PrepassError::ParseFailed(e))?;
+    let new_content = rewrite_placeholders(&content, &placeholders, &values);
+    std::fs::write(file, new_content)
+        .map_err(|e| PrepassError::Io(format!("write {}: {e}", file.display())))?;
+    Ok(())
+}
+
+/// build 子命令入口：重置所有 ai.auto.filled → ai.auto，然后 run。
+///
+/// 不执行脚本。
+pub fn build_only(file: &Path, lang: Lang) -> Result<(), PrepassError> {
+    let content = std::fs::read_to_string(file)
+        .map_err(|e| PrepassError::Io(format!("read {}: {e}", file.display())))?;
+    let reset = reset_filled(&content);
+    std::fs::write(file, reset)
+        .map_err(|e| PrepassError::Io(format!("write {}: {e}", file.display())))?;
+    run(file, lang)
+}

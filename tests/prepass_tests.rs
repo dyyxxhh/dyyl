@@ -166,3 +166,25 @@ fn reset_filled_no_change_if_no_filled() {
     let result = reset_filled(content);
     assert_eq!(result, content);
 }
+
+use dyyl::prepass::{run, build_only};
+use std::fs;
+use tempfile::tempdir;
+
+#[test]
+fn run_skips_when_no_placeholders() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("script.dyyl");
+    fs::write(&path, "io.out hello\n").unwrap();
+    run(&path, dyyl::i18n::Lang::En).expect("ok");
+    assert_eq!(fs::read_to_string(&path).unwrap(), "io.out hello\n");
+}
+
+#[test]
+fn build_only_no_change_when_no_ai_auto() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("script.dyyl");
+    fs::write(&path, "io.out hello\n").unwrap();
+    build_only(&path, dyyl::i18n::Lang::En).expect("ok");
+    assert_eq!(fs::read_to_string(&path).unwrap(), "io.out hello\n");
+}
