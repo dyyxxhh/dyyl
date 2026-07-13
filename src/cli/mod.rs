@@ -40,6 +40,25 @@ pub fn try_handle_subcommand(args: &[String], lang: &mut Lang) -> CliResult {
                 let code = plugin_cmds::dispatch(arg, rest, *lang);
                 return CliResult::Handled(code);
             }
+            "build" => {
+                // dyyl build <filename>：重置所有 ai.auto.filled → ai.auto，
+                // 然后预扫描批量填值。不执行脚本。
+                let Some(file) = args.get(i + 1) else {
+                    eprintln!("Usage: dyyl build <filename>");
+                    return CliResult::Handled(1);
+                };
+                let code = match crate::prepass::build_only(
+                    std::path::Path::new(file),
+                    *lang,
+                ) {
+                    Ok(()) => 0,
+                    Err(e) => {
+                        eprintln!("prepass failed: {e}");
+                        2
+                    }
+                };
+                return CliResult::Handled(code);
+            }
             _ => return CliResult::NotASubcommand,
         }
         i += 1;

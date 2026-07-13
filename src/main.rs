@@ -99,6 +99,17 @@ fn main() {
         }
     };
 
+    // 预扫描：检测未填 ai.auto → 批量请求 → 回写源码。
+    // 在 parser 之前执行，因为可能修改源文件。
+    let prepass_path = std::path::PathBuf::from(&filename);
+    if let Err(e) = dyyl::prepass::run(&prepass_path, lang) {
+        eprintln!(
+            "dyyl: {}",
+            dyyl::i18n::t(lang, "ai.prepass_failed", &[("reason", &e.to_string())])
+        );
+        process::exit(2);
+    }
+
     let source = match fs::read_to_string(&filename) {
         Ok(s) => s,
         Err(e) => {
