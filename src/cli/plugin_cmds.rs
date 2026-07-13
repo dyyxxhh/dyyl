@@ -119,9 +119,138 @@ fn install_plugin_by_name(name: &str, lang: Lang) -> Result<String, String> {
 }
 
 fn cmd_update(args: &[String], lang: Lang) -> i32 {
-    let _ = (args, lang);
-    eprintln!("update: not yet implemented");
-    1
+    if args.is_empty() {
+        // Update all installed plugins.
+        let installed = match crate::runtime::plugin::registry::scan_installed() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("{e}");
+                return 1;
+            }
+        };
+        let mut updated = 0usize;
+        let mut latest = 0usize;
+        let mut failed = 0usize;
+        for p in &installed {
+            match update_single(&p.name, lang) {
+                UpdateOutcome::Updated => updated += 1,
+                UpdateOutcome::AlreadyLatest => latest += 1,
+                UpdateOutcome::Failed(_) => failed += 1,
+            }
+        }
+        println!(
+            "{}",
+            crate::i18n::plugin_update_all_summary(lang, updated, latest, failed)
+        );
+        if failed > 0 {
+            1
+        } else {
+            0
+        }
+    } else {
+        let name = &args[0];
+        if crate::runtime::plugin::registry::find_installed(name).is_none() {
+            eprintln!("{}", crate::i18n::plugin_not_installed(lang, name));
+            return 1;
+        }
+        match update_single(name, lang) {
+            UpdateOutcome::Updated => 0,
+            UpdateOutcome::AlreadyLatest => 0,
+            UpdateOutcome::Failed(e) => {
+                eprintln!("{}", crate::i18n::plugin_update_failed(lang, name, &e));
+                1
+            }
+        }
+    }
+}
+
+enum UpdateOutcome {
+    Updated,
+    AlreadyLatest,
+    Failed(String),
+}
+
+fn update_single(name: &str, lang: Lang) -> UpdateOutcome {
+    use crate::runtime::plugin::{fetch, manifest::*, registry, store};
+    use std::fs;
+
+    // Get current installed version.
+    let current = match registry::find_installed(name) {
+        Some(p) => p,
+        None => return UpdateOutcome::Failed("not installed".to_string()),
+    };
+    let toml_content = match fs::read_to_string(&current.toml_path) {
+        Ok(s) => s,
+        Err(e) => return UpdateOutcome::Failed(e.to_string()),
+    };
+    let local: LocalPluginToml = match toml::from_str(&toml_content) {
+        Ok(t) => t,
+        Err(e) => return UpdateOutcome::Failed(e.to_string()),
+    };
+
+    // Fetch remote manifest.
+    let remote = match fetch::fetch_manifest(name) {
+        Ok(m) => m,
+        Err(e) => return UpdateOutcome::Failed(e.to_string()),
+    };
+
+    if remote.version == local.version {
+        return UpdateOutcome::AlreadyLatest;
+    }
+
+    // Download + install new version.
+    let cur_platform = store::current_platform();
+    let entry = match remote.platforms.iter().find(|p| p.platform == cur_platform) {
+        Some(e) => e,
+        None => {
+            return UpdateOutcome::Failed(format!("no build for {cur_platform}"));
+        }
+    };
+
+    let bytes = match fetch::download_and_verify(&entry.url, &entry.sha256) {
+        Ok(b) => b,
+        Err(e) => return UpdateOutcome::Failed(e.to_string()),
+    };
+
+    let new_lib_path = store::lib_path(name, &remote.version);
+    let new_toml_path = store::plugin_toml_path(name, &remote.version);
+    let new_version_dir = store::plugin_version_dir(name, &remote.version);
+
+    if let Err(e) = fs::create_dir_all(&new_version_dir) {
+        return UpdateOutcome::Failed(e.to_string());
+    }
+    if let Err(e) = fs::write(&new_lib_path, &bytes) {
+        return UpdateOutcome::Failed(e.to_string());
+    }
+
+    let new_local = LocalPluginToml {
+        name: remote.name.clone(),
+        version: remote.version.clone(),
+        abi_version: remote.abi_version,
+        dyyl_min: remote.dyyl_min.clone(),
+        panic_mode: remote.panic_mode.clone(),
+        commands: remote.commands.clone(),
+        installed: InstalledRecord {
+            source_url: entry.url.clone(),
+            sha256: entry.sha256.clone(),
+            installed_at: chrono::Utc::now().to_rfc3339(),
+            dyyl_version: env!("CARGO_PKG_VERSION").to_string(),
+        },
+    };
+    let toml_content = toml::to_string_pretty(&new_local).unwrap_or_default();
+    if let Err(e) = fs::write(&new_toml_path, toml_content) {
+        return UpdateOutcome::Failed(e.to_string());
+    }
+
+    // Remove old version directory.
+    let old_version_dir = store::plugin_version_dir(name, &local.version);
+    let _ = fs::remove_dir_all(&old_version_dir);
+
+    println!(
+        "{}",
+        crate::i18n::plugin_updated(lang, name, &local.version, &remote.version)
+    );
+    UpdateOutcome::Updated
 }
 
 fn cmd_remove(args: &[String], lang: Lang) -> i32 {
