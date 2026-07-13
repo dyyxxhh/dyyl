@@ -98,16 +98,13 @@ impl PluginManager {
 
         // 4. Encode args, call handle_command, decode result.
         let args_json = values_to_json_array(args);
-        let result_json = lp
-            .loader
-            .handle_command(sub, &args_json)
-            .map_err(|e| {
-                RuntimeError::new(
-                    line,
-                    format!("{name}.{sub}"),
-                    crate::i18n::plugin_command_failed(lang, name, sub, &e.to_string()),
-                )
-            })?;
+        let result_json = lp.loader.handle_command(sub, &args_json).map_err(|e| {
+            RuntimeError::new(
+                line,
+                format!("{name}.{sub}"),
+                crate::i18n::plugin_command_failed(lang, name, sub, &e.to_string()),
+            )
+        })?;
 
         value_from_json(&result_json).map_err(|e| {
             RuntimeError::new(
@@ -177,12 +174,7 @@ impl PluginManager {
     }
 
     /// Fetch manifest, download library, verify SHA256, install to XDG dir.
-    fn install_plugin(
-        &self,
-        name: &str,
-        lang: Lang,
-        line: usize,
-    ) -> Result<PathBuf, RuntimeError> {
+    fn install_plugin(&self, name: &str, lang: Lang, line: usize) -> Result<PathBuf, RuntimeError> {
         // 1. Fetch manifest.
         let manifest = fetch::fetch_manifest(name).map_err(|e| {
             let reason = match e {
@@ -203,7 +195,12 @@ impl PluginManager {
             return Err(RuntimeError::new(
                 line,
                 name,
-                crate::i18n::plugin_abi_mismatch(lang, name, DYRL_API_VERSION, manifest.abi_version),
+                crate::i18n::plugin_abi_mismatch(
+                    lang,
+                    name,
+                    DYRL_API_VERSION,
+                    manifest.abi_version,
+                ),
             ));
         }
 
@@ -214,12 +211,20 @@ impl PluginManager {
             .iter()
             .find(|p| p.platform == current)
             .ok_or_else(|| {
-                let available: Vec<String> =
-                    manifest.platforms.iter().map(|p| p.platform.clone()).collect();
+                let available: Vec<String> = manifest
+                    .platforms
+                    .iter()
+                    .map(|p| p.platform.clone())
+                    .collect();
                 RuntimeError::new(
                     line,
                     name,
-                    crate::i18n::plugin_platform_unavailable(lang, name, &current, &available.join(", ")),
+                    crate::i18n::plugin_platform_unavailable(
+                        lang,
+                        name,
+                        &current,
+                        &available.join(", "),
+                    ),
                 )
             })?;
 
@@ -229,7 +234,11 @@ impl PluginManager {
                 RuntimeError::new(line, name, crate::i18n::plugin_sha256_mismatch(lang, name))
             }
             FetchError::Http(_, msg) | FetchError::Read(_, msg) | FetchError::Parse(_, msg) => {
-                RuntimeError::new(line, name, crate::i18n::plugin_download_failed(lang, name, &msg))
+                RuntimeError::new(
+                    line,
+                    name,
+                    crate::i18n::plugin_download_failed(lang, name, &msg),
+                )
             }
         })?;
 
@@ -270,8 +279,8 @@ impl PluginManager {
 
     /// Read the installed version of a plugin from its `plugin.toml`.
     fn read_installed_version(&self, name: &str) -> Result<String, String> {
-        let rec = registry::find_installed(name)
-            .ok_or_else(|| format!("plugin {name} not installed"))?;
+        let rec =
+            registry::find_installed(name).ok_or_else(|| format!("plugin {name} not installed"))?;
         let content = fs::read_to_string(&rec.toml_path)
             .map_err(|e| format!("read {}: {e}", rec.toml_path.display()))?;
         let toml: LocalPluginToml = toml::from_str(&content)
