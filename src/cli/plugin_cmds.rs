@@ -109,6 +109,7 @@ fn install_plugin_by_name(name: &str, lang: Lang) -> Result<String, String> {
         dyyl_min: manifest.dyyl_min.clone(),
         panic_mode: manifest.panic_mode.clone(),
         commands: manifest.commands.clone(),
+        credentials: manifest.credentials.clone(),
         installed: InstalledRecord {
             source_url: entry.url.clone(),
             sha256: entry.sha256.clone(),
@@ -240,6 +241,7 @@ fn update_single(name: &str, lang: Lang) -> UpdateOutcome {
         dyyl_min: remote.dyyl_min.clone(),
         panic_mode: remote.panic_mode.clone(),
         commands: remote.commands.clone(),
+        credentials: remote.credentials.clone(),
         installed: InstalledRecord {
             source_url: entry.url.clone(),
             sha256: entry.sha256.clone(),

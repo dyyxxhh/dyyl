@@ -304,6 +304,7 @@ fn build_local_toml(manifest: &RemoteManifest, source_url: &str, sha256: &str) -
         dyyl_min: manifest.dyyl_min.clone(),
         panic_mode: manifest.panic_mode.clone(),
         commands: manifest.commands.clone(),
+        credentials: manifest.credentials.clone(),
         installed: InstalledRecord {
             source_url: source_url.to_string(),
             sha256: sha256.to_string(),

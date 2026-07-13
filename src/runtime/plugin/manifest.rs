@@ -17,6 +17,9 @@ pub struct RemoteManifest {
     /// Optional: indicates plugin ships locales/ directory.
     #[serde(default)]
     pub has_locales: bool,
+    /// 可选：插件声明需要的凭证字段。
+    #[serde(default)]
+    pub credentials: Option<CredentialsSpec>,
 }
 
 fn default_panic_mode() -> String {
@@ -51,6 +54,9 @@ pub struct LocalPluginToml {
     #[serde(default)]
     pub commands: Vec<PluginCommand>,
     pub installed: InstalledRecord,
+    /// 可选：插件声明需要的凭证字段（从远程 manifest 透传到本地）。
+    #[serde(default)]
+    pub credentials: Option<CredentialsSpec>,
 }
 
 /// Installation metadata in `plugin.toml`.
@@ -60,6 +66,29 @@ pub struct InstalledRecord {
     pub sha256: String,
     pub installed_at: String,
     pub dyyl_version: String,
+}
+
+/// 远程 manifest 中的插件凭证声明。
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CredentialsSpec {
+    #[serde(default)]
+    pub fields: Vec<CredentialField>,
+}
+
+/// 单个凭证字段声明。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CredentialField {
+    pub name: String,
+    #[serde(default = "default_field_type")]
+    pub r#type: String,
+    #[serde(default)]
+    pub secret: bool,
+    #[serde(default)]
+    pub description: String,
+}
+
+fn default_field_type() -> String {
+    "string".to_string()
 }
 
 impl LocalPluginToml {
