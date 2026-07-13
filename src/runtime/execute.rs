@@ -1,7 +1,8 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::i18n::Lang;
-use crate::parser::types::ParsedCommand;
+use crate::parser::types::{Call, Expr, ParsedCommand};
 use crate::runtime::cmd::context::ExecContext;
 use crate::runtime::cmd::dispatch::dispatch_call;
 use crate::runtime::env::Env;
@@ -12,6 +13,37 @@ use crate::runtime::value::Value;
 
 #[path = "exec_block.rs"]
 mod exec_block;
+
+/// 扫描命令列表，为每个 `_` 开放块（logic.if/else/while/for 的行数参数为 `_`）
+/// 找到对应的 `logic.end` 索引。
+///
+/// 返回 命令索引 -> end 索引 的映射。显式行数块不在映射中。
+#[must_use]
+pub fn scan_open_blocks(commands: &[ParsedCommand]) -> HashMap<usize, usize> {
+    let mut map = HashMap::new();
+    let mut stack: Vec<usize> = Vec::new();
+    for (i, cmd) in commands.iter().enumerate() {
+        match cmd.call.command.as_str() {
+            "logic.if" | "logic.else" | "logic.while" | "logic.for" => {
+                if is_open_block(&cmd.call) {
+                    stack.push(i);
+                }
+            }
+            "logic.end" => {
+                if let Some(start) = stack.pop() {
+                    map.insert(start, i);
+                }
+            }
+            _ => {}
+        }
+    }
+    map
+}
+
+/// 判断 logic.if/else/while/for 的行数参数是否是 `_`（开放块）。
+fn is_open_block(call: &Call) -> bool {
+    matches!(call.args.get(1), Some(Expr::Empty))
+}
 
 #[derive(Debug)]
 pub struct ScriptOutput {
