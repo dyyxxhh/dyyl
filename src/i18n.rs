@@ -40,6 +40,102 @@ impl Lang {
     }
 }
 
+// ── Message store (key-value table backed by JSON resources) ───────
+
+use std::collections::HashMap;
+use std::sync::OnceLock;
+
+/// Plugin-registered message tables.
+#[derive(Default)]
+pub struct PluginMessages {
+    en: HashMap<String, String>,
+    zh: HashMap<String, String>,
+}
+
+/// Central message store. Holds dyyl's own en/zh tables (compiled in)
+/// plus plugin-registered tables.
+pub struct MessageStore {
+    en: HashMap<String, String>,
+    zh: HashMap<String, String>,
+    plugins: HashMap<String, PluginMessages>,
+}
+
+static STORE: OnceLock<MessageStore> = OnceLock::new();
+
+const EN_JSON: &str = include_str!("../locales/en.json");
+const ZH_JSON: &str = include_str!("../locales/zh.json");
+
+fn parse_json(json: &str) -> HashMap<String, String> {
+    serde_json::from_str(json).unwrap_or_default()
+}
+
+fn init_store() -> MessageStore {
+    MessageStore {
+        en: parse_json(EN_JSON),
+        zh: parse_json(ZH_JSON),
+        plugins: HashMap::new(),
+    }
+}
+
+fn store() -> &'static MessageStore {
+    STORE.get_or_init(init_store)
+}
+
+/// Look up a message by key, interpolate `{placeholder}` args, and return
+/// the rendered string. Falls back zh→en if the zh key is missing (emits a
+/// stderr warning). If neither language has the key, returns the key name
+/// itself with a warning.
+#[must_use]
+pub fn t(lang: Lang, key: &str, args: &[(&str, &str)]) -> String {
+    let s = store();
+    // Determine which plugin table to check first (if key starts with "<plugin>.")
+    let plugin_name = key.split('.').next().unwrap_or(key);
+    let template = s.lookup_template(lang, key, plugin_name);
+    interpolate(&template, args)
+}
+
+impl MessageStore {
+    fn lookup_template(&self, lang: Lang, key: &str, plugin_name: &str) -> String {
+        // 1. Plugin table (if this plugin is registered and key starts with plugin name)
+        if key.starts_with(&format!("{plugin_name}.")) {
+            if let Some(pm) = self.plugins.get(plugin_name) {
+                if let Some(tpl) = match lang {
+                    Lang::En => pm.en.get(key),
+                    Lang::Zh => pm.zh.get(key).or_else(|| pm.en.get(key)),
+                } {
+                    return tpl.clone();
+                }
+            }
+        }
+        // 2. dyyl main table
+        let main_tpl = match lang {
+            Lang::En => self.en.get(key),
+            Lang::Zh => self.zh.get(key).or_else(|| {
+                eprintln!("i18n warning: zh translation missing for '{key}', falling back to en");
+                self.en.get(key)
+            }),
+        };
+        match main_tpl {
+            Some(tpl) => tpl.clone(),
+            None => {
+                eprintln!("i18n warning: no translation found for '{key}'");
+                key.to_string()
+            }
+        }
+    }
+}
+
+/// Replace `{placeholder}` occurrences in template with provided args.
+/// Unknown placeholders are left as-is.
+fn interpolate(template: &str, args: &[(&str, &str)]) -> String {
+    let mut result = template.to_string();
+    for (name, value) in args {
+        let placeholder = format!("{{{name}}}");
+        result = result.replace(&placeholder, value);
+    }
+    result
+}
+
 // ── Debug prefix helper ──────────────────────────────────────────────
 
 /// Return the "  reason: " / "  原因: " prefix for debug diagnostics.

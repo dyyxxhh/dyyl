@@ -47,3 +47,42 @@ fn default_language_is_english() {
     assert_eq!(output.values.len(), 1);
     assert_eq!(output.values[0], Value::Num(-1));
 }
+
+// ── MessageStore + t() tests (Task 2) ───────────────────────────────
+
+use dyyl::i18n::{t, Lang};
+
+#[test]
+fn t_looks_up_en_message() {
+    let msg = t(Lang::En, "runtime.division_by_zero", &[]);
+    assert_eq!(msg, "division by zero");
+}
+
+#[test]
+fn t_looks_up_zh_message() {
+    let msg = t(Lang::Zh, "runtime.division_by_zero", &[]);
+    assert_eq!(msg, "除以零");
+}
+
+#[test]
+fn t_interpolates_single_arg() {
+    let msg = t(Lang::En, "runtime.undefined_variable", &[("name", "foo")]);
+    assert_eq!(msg, "undefined variable 'foo'");
+}
+
+#[test]
+fn t_interpolates_multiple_args() {
+    let msg = t(
+        Lang::En,
+        "plugin.updated",
+        &[("name", "migpt"), ("old", "0.1.0"), ("new", "0.2.0")],
+    );
+    assert_eq!(msg, "updated migpt 0.1.0 -> 0.2.0");
+}
+
+#[test]
+fn t_en_and_zh_differ_for_same_key() {
+    let en = t(Lang::En, "plugin.sha256_mismatch", &[("name", "x")]);
+    let zh = t(Lang::Zh, "plugin.sha256_mismatch", &[("name", "x")]);
+    assert_ne!(en, zh);
+}
