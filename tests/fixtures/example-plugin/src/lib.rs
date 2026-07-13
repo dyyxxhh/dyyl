@@ -10,7 +10,7 @@ static mut HANDLE: *mut c_void = ptr::null_mut();
 
 #[no_mangle]
 pub extern "C" fn dyyl_plugin_get_api_version() -> c_uint {
-    1
+    2
 }
 
 #[no_mangle]
@@ -44,6 +44,14 @@ pub extern "C" fn dyyl_plugin_init(_api_version: c_uint) -> *mut c_void {
 
 #[no_mangle]
 pub extern "C" fn dyyl_plugin_on_load(_handle: *mut c_void) -> c_int {
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn dyyl_plugin_set_credentials(
+    _handle: *mut std::ffi::c_void,
+    _creds_json: *const std::os::raw::c_char,
+) -> std::os::raw::c_int {
     0
 }
 

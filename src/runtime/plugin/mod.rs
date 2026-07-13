@@ -158,7 +158,7 @@ impl PluginManager {
         })?;
 
         // 4. dlopen + init + on_load.
-        let loader = PluginLoader::load(&lib_path, name).map_err(|e| {
+        let loader = PluginLoader::load(&lib_path, name, None).map_err(|e| {
             RuntimeError::new(
                 line,
                 name,
@@ -191,7 +191,7 @@ impl PluginManager {
         })?;
 
         // 2. Validate ABI version.
-        if manifest.abi_version != DYRL_API_VERSION {
+        if manifest.abi_version != 1 && manifest.abi_version != DYRL_API_VERSION {
             return Err(RuntimeError::new(
                 line,
                 name,

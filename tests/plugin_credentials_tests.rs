@@ -1,3 +1,4 @@
+use dyyl::runtime::plugin::abi::{required_symbol_names, DYRL_API_VERSION};
 use dyyl::runtime::plugin::manifest::RemoteManifest;
 
 #[test]
@@ -36,4 +37,15 @@ fn parse_manifest_without_credentials() {
     }"#;
     let m: RemoteManifest = serde_json::from_str(json).expect("parse");
     assert!(m.credentials.is_none());
+}
+
+#[test]
+fn abi_version_is_2() {
+    assert_eq!(DYRL_API_VERSION, 2);
+}
+
+#[test]
+fn required_symbols_include_set_credentials() {
+    let names = required_symbol_names();
+    assert!(names.contains(&"dyyl_plugin_set_credentials"));
 }

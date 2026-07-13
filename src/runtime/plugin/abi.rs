@@ -1,6 +1,6 @@
 //! C ABI types and function signatures for the plugin protocol.
 //!
-//! Each plugin must export these 14 symbols (see spec §4.1):
+//! Each plugin must export these 15 symbols (see spec §4.1):
 //!   dyyl_plugin_get_api_version
 //!   dyyl_plugin_get_name
 //!   dyyl_plugin_get_version
@@ -15,12 +15,13 @@
 //!   dyyl_plugin_on_unload
 //!   dyyl_plugin_shutdown
 //!   dyyl_plugin_free_string
+//!   dyyl_plugin_set_credentials
 //!
 //! All strings are UTF-8, NUL-terminated, malloc'd by the plugin, freed by
 //! the plugin via dyyl_plugin_free_string.
 
 /// The dyyl plugin API version this dyyl build supports.
-pub const DYRL_API_VERSION: u32 = 1;
+pub const DYRL_API_VERSION: u32 = 2;
 
 /// Type alias for the plugin handle (opaque pointer returned by init).
 pub type PluginHandle = *mut std::ffi::c_void;
@@ -38,6 +39,8 @@ pub enum AbiError {
     CommandFailed(i32),
     /// A string from the plugin was invalid UTF-8.
     InvalidUtf8,
+    /// set_credentials 返回非 0。
+    SetCredentialsFailed(i32),
 }
 
 impl std::fmt::Display for AbiError {
@@ -48,6 +51,7 @@ impl std::fmt::Display for AbiError {
             Self::OnLoadFailed(c) => write!(f, "on_load() failed with code {c}"),
             Self::CommandFailed(c) => write!(f, "handle_command() returned {c}"),
             Self::InvalidUtf8 => write!(f, "invalid UTF-8 from plugin"),
+            Self::SetCredentialsFailed(c) => write!(f, "set_credentials() failed with code {c}"),
         }
     }
 }
@@ -75,11 +79,12 @@ pub mod symbols {
     pub type Shutdown = unsafe extern "C" fn(PluginHandle);
     pub type FreeString = unsafe extern "C" fn(*mut c_char);
     pub type OnErrorRaw = unsafe extern "C" fn(PluginHandle, *const c_char, c_int, *const c_char);
+    pub type SetCredentials = unsafe extern "C" fn(PluginHandle, *const c_char) -> c_int;
 }
 
-/// Names of the 14 required symbols, in order.
+/// Names of the 15 required symbols, in order.
 #[must_use]
-pub fn required_symbol_names() -> [&'static str; 14] {
+pub fn required_symbol_names() -> [&'static str; 15] {
     [
         "dyyl_plugin_get_api_version",
         "dyyl_plugin_get_name",
@@ -95,5 +100,6 @@ pub fn required_symbol_names() -> [&'static str; 14] {
         "dyyl_plugin_on_unload",
         "dyyl_plugin_shutdown",
         "dyyl_plugin_free_string",
+        "dyyl_plugin_set_credentials",
     ]
 }

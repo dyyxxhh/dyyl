@@ -1,6 +1,6 @@
 //! dlopen + symbol resolution + dispatch.
 //!
-//! Opens a plugin dynamic library with `libloading`, resolves the 14
+//! Opens a plugin dynamic library with `libloading`, resolves the 15
 //! required ABI symbols, and provides typed methods to call them.
 
 use std::ffi::{CStr, CString};
@@ -28,7 +28,11 @@ impl PluginLoader {
     /// Open a plugin library, verify API version, call `init`, call `on_load`.
     ///
     /// Returns the loaded plugin or an `AbiError`.
-    pub fn load(path: &Path, plugin_name: &str) -> Result<Self, AbiError> {
+    pub fn load(
+        path: &Path,
+        plugin_name: &str,
+        credentials_json: Option<&str>,
+    ) -> Result<Self, AbiError> {
         unsafe {
             let library = Library::new(path).map_err(|e| {
                 AbiError::SymbolMissing(format!("dlopen failed for {plugin_name}: {e}"))
@@ -39,10 +43,11 @@ impl PluginLoader {
                 .get(b"dyyl_plugin_get_api_version\0")
                 .map_err(|_| AbiError::SymbolMissing("dyyl_plugin_get_api_version".to_string()))?;
             let plugin_api_version = get_api_version();
-            if plugin_api_version != DYRL_API_VERSION {
+            // 支持 v1 和 v2 插件。v2 才有 set_credentials。
+            if plugin_api_version != 1 && plugin_api_version != DYRL_API_VERSION {
                 std::mem::drop(library);
                 return Err(AbiError::SymbolMissing(format!(
-                    "API version mismatch: plugin={plugin_api_version}, dyyl={DYRL_API_VERSION}"
+                    "API version mismatch: plugin={plugin_api_version}, dyyl supports 1 and {DYRL_API_VERSION}"
                 )));
             }
 
@@ -56,9 +61,22 @@ impl PluginLoader {
                 return Err(AbiError::InitFailed);
             }
 
+            // 3. set_credentials（仅当传入了 credentials_json 时）。
+            if let Some(json) = credentials_json {
+                let set_creds: symbols::SetCredentials = *library
+                    .get(b"dyyl_plugin_set_credentials\0")
+                    .map_err(|_| AbiError::SymbolMissing("dyyl_plugin_set_credentials".to_string()))?;
+                let json_c = CString::new(json).map_err(|_| AbiError::InvalidUtf8)?;
+                let rc = set_creds(handle, json_c.as_ptr());
+                if rc != 0 {
+                    std::mem::drop(library);
+                    return Err(AbiError::SetCredentialsFailed(rc));
+                }
+            }
+
             let mut loader = Self { library, handle };
 
-            // 3. on_load
+            // 4. on_load
             let on_load: symbols::OnLoad = *loader
                 .library
                 .get(b"dyyl_plugin_on_load\0")

@@ -24,7 +24,7 @@ fn load_and_call_greet() {
         eprintln!("skipping: fixture not built at {}", lib_path.display());
         return;
     }
-    let loader = PluginLoader::load(&lib_path, "example").expect("load failed");
+    let loader = PluginLoader::load(&lib_path, "example", None).expect("load failed");
 
     // List commands.
     let cmds = loader.list_commands().expect("list_commands failed");
@@ -44,7 +44,7 @@ fn load_and_call_math_double() {
         eprintln!("skipping: fixture not built at {}", lib_path.display());
         return;
     }
-    let loader = PluginLoader::load(&lib_path, "example").expect("load failed");
+    let loader = PluginLoader::load(&lib_path, "example", None).expect("load failed");
 
     let args = r#"[{"type":"num","value":"21"}]"#;
     let result = loader
@@ -60,7 +60,7 @@ fn load_and_call_unknown_command() {
         eprintln!("skipping: fixture not built at {}", lib_path.display());
         return;
     }
-    let loader = PluginLoader::load(&lib_path, "example").expect("load failed");
+    let loader = PluginLoader::load(&lib_path, "example", None).expect("load failed");
 
     let args = "[]";
     let result = loader.handle_command("nonexistent", args);
