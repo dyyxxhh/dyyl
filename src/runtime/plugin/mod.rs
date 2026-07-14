@@ -6,6 +6,7 @@
 //! l.dyyapp.com, downloads+verifies the library, dlopens it, and dispatches.
 
 pub mod abi;
+pub mod creds_inject;
 pub mod fetch;
 pub mod loader;
 pub mod manifest;
