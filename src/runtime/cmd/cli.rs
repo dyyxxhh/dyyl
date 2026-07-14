@@ -11,6 +11,7 @@ use crate::runtime::error::RuntimeError;
 use crate::runtime::value::Value;
 
 use super::context::ExecContext;
+use super::dispatch::eval_expr;
 
 /// Route a `cli.*` call to the appropriate handler.
 pub(crate) fn handle_cli_command(
@@ -65,10 +66,63 @@ fn handle_cli_count(call: &Call, env: &Env, ctx: &ExecContext) -> Result<Value, 
     Ok(Value::Num(env.script_args().len() as i64))
 }
 
-// Placeholder handlers for commands added in Tasks 3-5.
-// These will be replaced with real implementations in subsequent tasks.
-fn handle_cli_get(_call: &Call, _env: &mut Env, _ctx: &ExecContext) -> Result<Value, RuntimeError> {
-    Ok(Value::Num(-1))
+/// `cli.get <idx>` — return arg at 0-based index, or Num(-1) if OOB/negative.
+fn handle_cli_get(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value, RuntimeError> {
+    if call.args.len() != 1 {
+        return Err(RuntimeError::new(
+            ctx.line,
+            &call.command,
+            i18n::requires_n_args(ctx.lang.get(), 1),
+        ));
+    }
+    let val = eval_expr(&call.args[0], env, ctx)?;
+    let idx = match val {
+        Value::Num(n) => n,
+        Value::Str(s) => match s.parse::<i64>() {
+            Ok(n) => n,
+            Err(_) => {
+                return Err(RuntimeError::new(
+                    ctx.line,
+                    &call.command,
+                    i18n::expected_numeric(ctx.lang.get(), &Value::Str(s)),
+                ));
+            }
+        },
+        other => {
+            return Err(RuntimeError::new(
+                ctx.line,
+                &call.command,
+                i18n::expected_numeric(ctx.lang.get(), &other),
+            ));
+        }
+    };
+    if idx < 0 {
+        if ctx.debug {
+            eprintln!(
+                "line {}: {}: negative index {}",
+                ctx.line,
+                ctx.text,
+                idx
+            );
+        }
+        return Ok(Value::Num(-1));
+    }
+    let args = env.script_args();
+    match args.get(idx as usize) {
+        Some(s) => Ok(Value::Str(s.clone())),
+        None => {
+            if ctx.debug {
+                eprintln!(
+                    "line {}: {}: index {} out of bounds (len {})",
+                    ctx.line,
+                    ctx.text,
+                    idx,
+                    args.len()
+                );
+            }
+            Ok(Value::Num(-1))
+        }
+    }
 }
 
 fn handle_cli_has(_call: &Call, _env: &mut Env, _ctx: &ExecContext) -> Result<Value, RuntimeError> {

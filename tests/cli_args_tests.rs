@@ -24,3 +24,20 @@ fn cli_count_zero_when_no_args() {
     assert_eq!(out.values.len(), 1);
     assert_eq!(out.values[0], Value::Num(0));
 }
+
+#[test]
+fn cli_get_oob_returns_minus_one() {
+    // 无 args 时任何下标都越界 → -1
+    let src = "io.out cli.get(0)\n";
+    let out = run_script_with_lang(src, false, Lang::En);
+    assert_eq!(out.values.len(), 1);
+    assert_eq!(out.values[0], Value::Num(-1));
+}
+
+#[test]
+fn cli_get_negative_returns_minus_one() {
+    let src = "io.out cli.get(-1)\n";
+    let out = run_script_with_lang(src, false, Lang::En);
+    assert_eq!(out.values.len(), 1);
+    assert_eq!(out.values[0], Value::Num(-1));
+}

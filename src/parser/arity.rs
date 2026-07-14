@@ -72,6 +72,7 @@ pub(super) fn known_arity(command: &str) -> Option<usize> {
 
         // cli.* commands
         "cli.args" | "cli.count" => 0,
+        "cli.get" => 1,
 
         // time.* commands
         "time.get" | "time.now" | "time.year" | "time.month" | "time.day" => 0,
