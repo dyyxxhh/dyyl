@@ -51,16 +51,25 @@ pub(crate) fn dispatch_logic(
 }
 
 fn handle_cond(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value, RuntimeError> {
-    let val = eval_expr(&call.args[0], env, ctx)?;
+    let val = eval_expr(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     Ok(Value::Num(if is_truthy(&val) { 1 } else { 0 }))
 }
 
 fn handle_for_cond(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value, RuntimeError> {
-    let val = eval_expr(&call.args[0], env, ctx)?;
-    Ok(Value::Num(match numeric_val(&val, ctx) {
-        Some(n) => n,
-        None => 0,
-    }))
+    let val = eval_expr(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    Ok(Value::Num(numeric_val(&val, ctx).unwrap_or_default()))
 }
 
 // ── Shared helpers (also used by logic_handlers.rs via super::*) ─────

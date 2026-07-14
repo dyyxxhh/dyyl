@@ -14,9 +14,9 @@ pub fn round(a: &CasNumber) -> CasNumber {
             let half = *d / 2;
             let abs_r = (abs_n + half) / *d;
             if *n < 0 {
-                CasNumber::Int(-(abs_r as i64))
+                CasNumber::Int(-abs_r)
             } else {
-                CasNumber::Int(abs_r as i64)
+                CasNumber::Int(abs_r)
             }
         }
         _ => CasNumber::Int(a.to_f64().round() as i64),

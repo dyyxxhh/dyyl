@@ -77,7 +77,13 @@ fn handle_cli_get(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value
             i18n::requires_n_args(ctx.lang.get(), 1),
         ));
     }
-    let val = eval_expr(&call.args[0], env, ctx)?;
+    let val = eval_expr(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let idx = match val {
         Value::Num(n) => n,
         Value::Str(s) => match s.parse::<i64>() {
@@ -132,7 +138,13 @@ fn handle_cli_has(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value
             i18n::requires_n_args(ctx.lang.get(), 1),
         ));
     }
-    let val = eval_expr(&call.args[0], env, ctx)?;
+    let val = eval_expr(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let flag = match val {
         Value::Str(s) => s,
         Value::Num(n) => n.to_string(),
@@ -163,7 +175,13 @@ fn handle_cli_value(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Val
             i18n::requires_n_args(ctx.lang.get(), 1),
         ));
     }
-    let val = eval_expr(&call.args[0], env, ctx)?;
+    let val = eval_expr(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let flag = match val {
         Value::Str(s) => s,
         Value::Num(n) => n.to_string(),
@@ -178,8 +196,8 @@ fn handle_cli_value(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Val
     };
     let args = env.script_args();
     let eq_prefix = format!("{flag}=");
-    let mut iter = args.iter().enumerate();
-    while let Some((i, arg)) = iter.next() {
+    let iter = args.iter().enumerate();
+    for (i, arg) in iter {
         // --flag=value 形式
         if let Some(rest) = arg.strip_prefix(&eq_prefix) {
             return Ok(Value::Str(rest.to_string()));

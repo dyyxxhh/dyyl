@@ -54,7 +54,11 @@ fn do_slice(sc: &mut StrCtx) -> Result<Value, RuntimeError> {
     if start > end_clamped || start > chars.len() {
         return Ok(Value::sentinel_str());
     }
-    let result: String = chars[start..end_clamped].iter().collect();
+    let result: String = chars
+        .get(start..end_clamped)
+        .unwrap_or_default()
+        .iter()
+        .collect();
     Ok(Value::Str(result))
 }
 

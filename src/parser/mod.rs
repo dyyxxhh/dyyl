@@ -57,7 +57,7 @@ fn parse_line(tokens: &[Token], line: usize, text: &str) -> Result<ParsedCommand
         }
     };
 
-    let call = parse_call_from_tokens(&command, &tokens[1..], line, text)?;
+    let call = parse_call_from_tokens(&command, tokens.get(1..).unwrap_or_default(), line, text)?;
     Ok(ParsedCommand {
         line,
         text: text.to_string(),
@@ -78,7 +78,7 @@ fn parse_call_from_tokens(
 
     // Determine the split between non-greedy and greedy params.
     let non_greedy_count = match arity {
-        Some(k) if k == 0 => 0,
+        Some(0) => 0,
         Some(k) if param_tokens.len() > k => {
             if k == 1 {
                 0
@@ -104,7 +104,9 @@ fn parse_call_from_tokens(
     let mut i = 0;
     let mut consumed_non_greedy = 0;
     while consumed_non_greedy < non_greedy_count && i < param_tokens.len() {
-        let token = &param_tokens[i];
+        let Some(token) = param_tokens.get(i) else {
+            break;
+        };
 
         // Try to parse as a nested call without parentheses by looking ahead
         if let Token::Param(s) = token {
@@ -142,7 +144,7 @@ fn parse_call_from_tokens(
                         };
 
                         // Check if we have enough remaining tokens
-                        let remaining_after_current = &param_tokens[i + 1..];
+                        let remaining_after_current = param_tokens.get(i + 1..).unwrap_or_default();
                         if remaining_after_current.len() >= params_needed {
                             // Also ensure the outer command still gets its greedy param
                             let tokens_left = remaining_after_current.len() - params_needed;
@@ -165,16 +167,20 @@ fn parse_call_from_tokens(
                                         }
                                     })?;
                                     // Skip the command token (index 0), take the param
-                                    if lexed.len() > 1 {
-                                        inner_tokens.push(lexed[1].clone());
+                                    if let Some(t) = lexed.get(1) {
+                                        inner_tokens.push(t.clone());
                                     }
                                 }
                                 for t in remaining_after_current.iter().take(params_needed) {
                                     inner_tokens.push(t.clone());
                                 }
 
-                                let call =
-                                    parse_call_from_tokens(first, &inner_tokens[1..], line, text)?;
+                                let call = parse_call_from_tokens(
+                                    first,
+                                    inner_tokens.get(1..).unwrap_or_default(),
+                                    line,
+                                    text,
+                                )?;
                                 args.push(Expr::Call(call));
 
                                 // Skip consumed tokens
@@ -208,11 +214,11 @@ fn parse_call_from_tokens(
             None => false,
         };
 
-        let remaining_tokens = &param_tokens[actual_greedy_start..];
+        let remaining_tokens = param_tokens.get(actual_greedy_start..).unwrap_or_default();
 
         if is_greedy && !remaining_tokens.is_empty() {
             let expr = if remaining_tokens.len() == 1 {
-                if let Token::QuotedParam(s) = &remaining_tokens[0] {
+                if let Some(Token::QuotedParam(s)) = remaining_tokens.first() {
                     Expr::Param(s.clone())
                 } else {
                     let greedy_str = helpers::join_tokens_for_greedy(remaining_tokens);
@@ -313,10 +319,7 @@ fn parse_greedy_rhs(
         // Treat it as a literal to avoid misclassifying filenames; zero-arity
         // plugin calls should use explicit parentheses: `plugin.cmd()`.
         let first = helpers::first_word(trimmed);
-        if helpers::is_plugin_command_name(first)
-            && !trimmed.contains('(')
-            && first == trimmed
-        {
+        if helpers::is_plugin_command_name(first) && !trimmed.contains('(') && first == trimmed {
             return Ok(helpers::classify_literal_str(trimmed));
         }
 
@@ -330,14 +333,15 @@ fn parse_greedy_rhs(
             return Ok(Expr::Param(trimmed.to_string()));
         }
 
-        let cmd = match &inner_tokens[0] {
-            Token::Command(c) => c.clone(),
+        let cmd = match inner_tokens.first() {
+            Some(Token::Command(c)) => c.clone(),
             _ => {
                 return Ok(Expr::Param(trimmed.to_string()));
             }
         };
 
-        let call = parse_call_from_tokens(&cmd, &inner_tokens[1..], line, text)?;
+        let call =
+            parse_call_from_tokens(&cmd, inner_tokens.get(1..).unwrap_or_default(), line, text)?;
         Ok(Expr::Call(call))
     } else {
         Ok(helpers::classify_literal_str(trimmed))
@@ -387,5 +391,10 @@ fn parse_paren_call_str(s: &str, line: usize, text: &str) -> Result<Call, ParseE
         });
     }
 
-    parse_call_from_tokens(command, &inner_tokens[1..], line, text)
+    parse_call_from_tokens(
+        command,
+        inner_tokens.get(1..).unwrap_or_default(),
+        line,
+        text,
+    )
 }

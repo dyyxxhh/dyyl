@@ -20,8 +20,20 @@ pub(crate) fn handle_list_join(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let list_val = resolve_container(&call.args[0], env, ctx)?;
-    let sep_val = eval_expr(&call.args[1], env, ctx)?;
+    let list_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let sep_val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let sep = match sep_val {
         Value::Str(s) => s,
         Value::Num(n) => n.to_string(),
@@ -59,7 +71,12 @@ pub(crate) fn handle_list_reverse(
             i18n::cmd_requires_container(ctx.lang.get(), "list.reverse", "list"),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
     let current = env.get(&name).cloned().ok_or_else(|| {
         RuntimeError::new(
             ctx.line,
@@ -93,7 +110,12 @@ pub(crate) fn handle_list_sort(
             i18n::cmd_requires_container(ctx.lang.get(), "list.sort", "list"),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
     let current = env.get(&name).cloned().ok_or_else(|| {
         RuntimeError::new(
             ctx.line,
@@ -127,9 +149,27 @@ pub(crate) fn handle_list_slice(
             i18n::requires_n_args(ctx.lang.get(), 3),
         ));
     }
-    let list_val = resolve_container(&call.args[0], env, ctx)?;
-    let start_val = eval_expr(&call.args[1], env, ctx)?;
-    let end_val = eval_expr(&call.args[2], env, ctx)?;
+    let list_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let start_val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let end_val = eval_expr(
+        call.args
+            .get(2)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let start = match start_val {
         Value::Num(n) => n,
         _ => {
@@ -158,7 +198,7 @@ pub(crate) fn handle_list_slice(
             if s >= e {
                 Ok(Value::List(Vec::new()))
             } else {
-                Ok(Value::List(items[s..e].to_vec()))
+                Ok(Value::List(items.get(s..e).unwrap_or_default().to_vec()))
             }
         }
         _ => Err(RuntimeError::new(

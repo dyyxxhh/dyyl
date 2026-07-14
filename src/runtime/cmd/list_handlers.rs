@@ -19,7 +19,12 @@ pub(crate) fn handle_list_create(
             i18n::cmd_requires_var(ctx.lang.get(), "list.create"),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
     env.set(&name, Value::List(Vec::new()));
     Ok(Value::Empty)
 }
@@ -36,8 +41,20 @@ pub(crate) fn handle_list_get(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let list_val = resolve_container(&call.args[0], env, ctx)?;
-    let index_val = eval_expr(&call.args[1], env, ctx)?;
+    let list_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let index_val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match (list_val, index_val) {
         (Value::List(items), Value::Num(idx)) => {
             if idx < 0 || (idx as usize) >= items.len() {
@@ -51,7 +68,7 @@ pub(crate) fn handle_list_get(
                 }
                 Ok(Value::Num(-1))
             } else {
-                Ok(items[idx as usize].clone())
+                Ok(items.get(idx as usize).cloned().unwrap_or(Value::Num(-1)))
             }
         }
         _ => Err(RuntimeError::new(
@@ -74,7 +91,13 @@ pub(crate) fn handle_list_len(
             i18n::cmd_requires_container(ctx.lang.get(), "list.len", "list"),
         ));
     }
-    let list_val = resolve_container(&call.args[0], env, ctx)?;
+    let list_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match list_val {
         Value::List(items) => Ok(Value::Num(items.len() as i64)),
         _ => Err(RuntimeError::new(
@@ -97,8 +120,19 @@ pub(crate) fn handle_list_append(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
-    let val = eval_expr(&call.args[1], env, ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
+    let val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let current = env.get(&name).cloned().ok_or_else(|| {
         RuntimeError::new(
             ctx.line,
@@ -133,9 +167,26 @@ pub(crate) fn handle_list_insert(
             i18n::requires_n_args(ctx.lang.get(), 3),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
-    let idx_val = eval_expr(&call.args[1], env, ctx)?;
-    let val = eval_expr(&call.args[2], env, ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
+    let idx_val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let val = eval_expr(
+        call.args
+            .get(2)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let idx = match idx_val {
         Value::Num(n) => n,
         _ => {
@@ -186,8 +237,19 @@ pub(crate) fn handle_list_remove(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
-    let idx_val = eval_expr(&call.args[1], env, ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
+    let idx_val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let idx = match idx_val {
         Value::Num(n) => n,
         _ => {

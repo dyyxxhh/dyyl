@@ -19,11 +19,23 @@ pub(crate) fn handle_list_contains(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let list_val = resolve_container(&call.args[0], env, ctx)?;
-    let needle = eval_expr(&call.args[1], env, ctx)?;
+    let list_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let needle = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match list_val {
         Value::List(items) => {
-            let found = items.iter().any(|v| *v == needle);
+            let found = items.contains(&needle);
             Ok(Value::Num(if found { 1 } else { 0 }))
         }
         _ => Err(RuntimeError::new(
@@ -46,8 +58,20 @@ pub(crate) fn handle_list_index(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let list_val = resolve_container(&call.args[0], env, ctx)?;
-    let needle = eval_expr(&call.args[1], env, ctx)?;
+    let list_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let needle = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match list_val {
         Value::List(items) => {
             for (i, v) in items.iter().enumerate() {

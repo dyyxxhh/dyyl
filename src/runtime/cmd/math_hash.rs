@@ -20,9 +20,21 @@ pub(crate) fn hash_cmd(
             "math.hash requires at least 1 argument",
         ));
     }
-    let val = eval_expr(&call.args[0], env, ctx)?;
+    let val = eval_expr(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let algo = if call.args.len() > 1 {
-        let algo_expr = eval_expr(&call.args[1], env, ctx)?;
+        let algo_expr = eval_expr(
+            call.args
+                .get(1)
+                .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+            env,
+            ctx,
+        )?;
         algo_to_string(&algo_expr)
     } else {
         "sha256".to_string()

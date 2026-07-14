@@ -56,10 +56,7 @@ fn handle_user_id(ctx: &ExecContext) -> Result<Value, RuntimeError> {
     if let Ok(status) = std::fs::read_to_string("/proc/self/status") {
         for line in status.lines() {
             if let Some(rest) = line.strip_prefix("Uid:") {
-                let uid_str = match rest.trim().split_whitespace().next() {
-                    Some(s) => s,
-                    None => "",
-                };
+                let uid_str = rest.split_whitespace().next().unwrap_or_default();
                 if !uid_str.is_empty() {
                     return Ok(Value::Str(uid_str.to_string()));
                 }

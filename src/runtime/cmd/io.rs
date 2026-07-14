@@ -15,7 +15,13 @@ pub(crate) fn handle_io_out(
     if call.args.is_empty() {
         return Ok(Value::Empty);
     }
-    let val = eval_expr(&call.args[0], env, ctx)?;
+    let val = eval_expr(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     println!("{}", val);
     Ok(val)
 }
@@ -91,7 +97,13 @@ pub(crate) fn handle_io_inpasswd(
     let mode = if call.args.is_empty() {
         0i64
     } else {
-        let val = eval_expr(&call.args[0], env, ctx)?;
+        let val = eval_expr(
+            call.args
+                .first()
+                .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+            env,
+            ctx,
+        )?;
         match val {
             Value::Num(n) => n,
             Value::Str(s) => s.parse::<i64>().unwrap_or(0),

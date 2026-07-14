@@ -31,10 +31,7 @@ fn cmd_install(args: &[String], lang: Lang) -> i32 {
 
     // Check if already installed with same version.
     if let Some(existing) = crate::runtime::plugin::registry::find_installed(name) {
-        let toml_content = match std::fs::read_to_string(&existing.toml_path) {
-            Ok(s) => s,
-            Err(_) => String::new(),
-        };
+        let toml_content = std::fs::read_to_string(&existing.toml_path).unwrap_or_default();
         if let Ok(t) =
             toml::from_str::<crate::runtime::plugin::manifest::LocalPluginToml>(&toml_content)
         {

@@ -149,8 +149,7 @@ pub(crate) fn eval_expr(
             Ok(Value::Expr(CasNumber::Sqrt(Box::new(rad_val))))
         }
         Expr::Param(s) => {
-            if s.starts_with('$') {
-                let name = &s[1..];
+            if let Some(name) = s.strip_prefix('$') {
                 env.get(name).cloned().ok_or_else(|| {
                     RuntimeError::new(ctx.line, "", i18n::undefined_variable(ctx.lang.get(), s))
                 })

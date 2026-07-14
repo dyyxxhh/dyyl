@@ -119,11 +119,7 @@ pub fn rewrite_placeholders(
 /// 把 `ai.auto.filled <提示>, <值>` 替换回 `ai.auto <提示>`。
 pub fn reset_filled(content: &str) -> String {
     let mut result = content.to_string();
-    loop {
-        let pos = match result.find("ai.auto.filled") {
-            Some(p) => p,
-            None => break,
-        };
+    while let Some(pos) = result.find("ai.auto.filled") {
         let after = &result[pos + "ai.auto.filled".len()..];
         let (hint_literal, consumed) = parse_filled_args(after);
         let hint_str = match hint_literal.trim() {
@@ -227,15 +223,14 @@ pub fn run(file: &Path, lang: Lang) -> Result<(), PrepassError> {
         Err(_) => credentials::CredentialsFile::default_path()
             .ok_or_else(|| PrepassError::AiFailed("no config dir".to_string()))?,
     };
-    let ai_creds = credentials::ensure_ai(&creds_path, lang)
-        .map_err(|_| PrepassError::CredentialAborted)?;
+    let ai_creds =
+        credentials::ensure_ai(&creds_path, lang).map_err(|_| PrepassError::CredentialAborted)?;
     let provider = crate::ai::build_provider(&ai_creds);
     let (system, user_prompt) = build_batch(&content, &placeholders);
     let response = provider
         .ask(&system, &user_prompt)
         .map_err(|e| PrepassError::AiFailed(e.to_string()))?;
-    let values = parse_response(&response)
-        .map_err(|e| PrepassError::ParseFailed(e))?;
+    let values = parse_response(&response).map_err(PrepassError::ParseFailed)?;
     let new_content = rewrite_placeholders(&content, &placeholders, &values);
     std::fs::write(file, new_content)
         .map_err(|e| PrepassError::Io(format!("write {}: {e}", file.display())))?;

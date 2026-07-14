@@ -22,8 +22,19 @@ pub(crate) fn handle_set(
             i18n::set_requires_two_args(ctx.lang.get()).to_string(),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
-    let val = eval_expr(&call.args[1], env, ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
+    let val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     env.set(&name, val.clone());
     Ok(val)
 }
@@ -41,7 +52,12 @@ pub(crate) fn handle_create_num(
             i18n::cmd_requires_var(ctx.lang.get(), "create.num"),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
     env.create_num(&name);
     Ok(Value::Num(0))
 }
@@ -59,7 +75,12 @@ pub(crate) fn handle_create_str(
             i18n::cmd_requires_var(ctx.lang.get(), "create.str"),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
     env.create_str(&name);
     Ok(Value::Str(String::new()))
 }

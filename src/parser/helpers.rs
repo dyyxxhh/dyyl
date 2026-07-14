@@ -84,7 +84,7 @@ pub(super) fn is_paren_call(s: &str) -> bool {
 
 /// Join remaining tokens for greedy RHS reconstruction.
 pub(super) fn join_tokens_for_greedy(tokens: &[Token]) -> String {
-    let parts: Vec<String> = tokens.iter().map(|t| token_raw_string(t)).collect();
+    let parts: Vec<String> = tokens.iter().map(token_raw_string).collect();
     parts.join(", ")
 }
 

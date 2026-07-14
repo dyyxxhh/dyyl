@@ -300,7 +300,7 @@ fn exec_commands_range(
     let mut prev_if_was_false = false;
 
     while i < end {
-        let cmd = &commands[i];
+        let Some(cmd) = commands.get(i) else { break };
         let consumed = exec_one_command(
             cmd,
             env,
@@ -319,6 +319,7 @@ fn exec_commands_range(
     i - start
 }
 
+#[allow(clippy::too_many_arguments)]
 fn exec_one_command(
     cmd: &ParsedCommand,
     env: &mut Env,
@@ -387,6 +388,7 @@ fn push_result(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn exec_commands_range_with_error(
     commands: &[ParsedCommand],
     start: usize,
@@ -404,7 +406,7 @@ fn exec_commands_range_with_error(
     let mut prev_if_was_false = false;
 
     while i < end {
-        let cmd = &commands[i];
+        let Some(cmd) = commands.get(i) else { break };
         let consumed = exec_one_command_with_error(
             cmd,
             env,
@@ -424,6 +426,7 @@ fn exec_commands_range_with_error(
     i - start
 }
 
+#[allow(clippy::too_many_arguments)]
 fn exec_one_command_with_error(
     cmd: &ParsedCommand,
     env: &mut Env,

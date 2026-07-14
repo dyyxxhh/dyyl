@@ -265,7 +265,7 @@ fn resolve_escapes(s: &str) -> String {
     let mut result = String::with_capacity(s.len());
     let mut chars = s.chars();
     let mut escape_next = false;
-    while let Some(c) = chars.next() {
+    for c in chars {
         if escape_next {
             match c {
                 'n' => result.push('\n'),

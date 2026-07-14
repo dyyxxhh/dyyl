@@ -10,6 +10,7 @@ use crate::runtime::env::Env;
 use crate::runtime::io_provider::IoProvider;
 use crate::runtime::value::Value;
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn exec_block_cmd(
     cmd: &ParsedCommand,
     env: &mut Env,

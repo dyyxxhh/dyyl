@@ -55,9 +55,15 @@ fn do_insert(sc: &mut StrCtx) -> Result<Value, RuntimeError> {
     if idx > chars.len() {
         return Ok(Value::Str(s));
     }
-    let mut result: String = chars[..idx].iter().collect();
+    let mut result: String = chars.get(..idx).unwrap_or_default().iter().collect();
     result.push_str(&ins);
-    result.push_str(&chars[idx..].iter().collect::<String>());
+    result.push_str(
+        &chars
+            .get(idx..)
+            .unwrap_or_default()
+            .iter()
+            .collect::<String>(),
+    );
     Ok(Value::Str(result))
 }
 
@@ -70,8 +76,14 @@ fn do_remove(sc: &mut StrCtx) -> Result<Value, RuntimeError> {
     if start > end_clamped || start > chars.len() {
         return Ok(Value::Str(s));
     }
-    let mut result: String = chars[..start].iter().collect();
-    result.push_str(&chars[end_clamped..].iter().collect::<String>());
+    let mut result: String = chars.get(..start).unwrap_or_default().iter().collect();
+    result.push_str(
+        &chars
+            .get(end_clamped..)
+            .unwrap_or_default()
+            .iter()
+            .collect::<String>(),
+    );
     Ok(Value::Str(result))
 }
 

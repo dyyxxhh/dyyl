@@ -134,10 +134,7 @@ fn read_key_tty() -> Result<String, IoError> {
     let result = read_one_byte(fd);
     restore_and_close(fd, &orig_termios);
 
-    let byte = match result {
-        Ok(b) => b,
-        Err(e) => return Err(e),
-    };
+    let byte = result?;
 
     Ok(byte_to_key_name(byte, fd_reopen_for_esc_seq()))
 }
@@ -260,6 +257,7 @@ fn byte_to_key_name(byte: u8, esc_fd: std::os::unix::io::RawFd) -> String {
 ///
 /// Pre-load responses via `push_line`, `push_key`, and `push_password`.
 /// When a queue is exhausted, the operation returns `NoInputAvailable`.
+#[derive(Default)]
 pub struct MockIoProvider {
     lines: Mutex<VecDeque<String>>,
     keys: Mutex<VecDeque<String>>,

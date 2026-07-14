@@ -145,8 +145,22 @@ fn do_mixed(
             i18n::requires_n_args(mc.exec.lang.get(), 2),
         ));
     }
-    let a = eval_expr(&mc.call.args[0], mc.env, mc.exec)?;
-    let b = eval_expr(&mc.call.args[1], mc.env, mc.exec)?;
+    let a = eval_expr(
+        mc.call
+            .args
+            .first()
+            .ok_or_else(|| RuntimeError::new(mc.exec.line, &mc.call.command, "missing argument"))?,
+        mc.env,
+        mc.exec,
+    )?;
+    let b = eval_expr(
+        mc.call
+            .args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(mc.exec.line, &mc.call.command, "missing argument"))?,
+        mc.env,
+        mc.exec,
+    )?;
     match (&a, &b) {
         (Value::Expr(ca), Value::Expr(cb)) => Ok(Value::Expr((op.0)(ca, cb))),
         (Value::Expr(ca), Value::Num(nb)) => Ok(Value::Expr((op.0)(ca, &CasNumber::Int(*nb)))),

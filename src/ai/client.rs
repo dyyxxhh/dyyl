@@ -30,9 +30,7 @@ pub type RequestExecutor = Box<dyn Fn(&HttpRequest) -> Result<HttpResponse, AiEr
 /// 默认执行器：用 ureq 发真实 HTTP 请求。
 fn default_executor(timeout: Duration) -> RequestExecutor {
     Box::new(move |req: &HttpRequest| -> Result<HttpResponse, AiError> {
-        let agent = ureq::AgentBuilder::new()
-            .timeout(timeout)
-            .build();
+        let agent = ureq::AgentBuilder::new().timeout(timeout).build();
         let mut request = match req.method.as_str() {
             "GET" => agent.get(&req.url),
             _ => agent.post(&req.url),
@@ -48,10 +46,10 @@ fn default_executor(timeout: Duration) -> RequestExecutor {
             Ok(resp) => {
                 let status = resp.status();
                 let mut body = String::new();
-                resp.into_reader()
-                    .read_to_string(&mut body)
-                    .map_err(|e| AiError::new(AiErrorKind::Network, format!("read body: {e}"), None))?;
-                Ok(HttpResponse { status: status as u16, body })
+                resp.into_reader().read_to_string(&mut body).map_err(|e| {
+                    AiError::new(AiErrorKind::Network, format!("read body: {e}"), None)
+                })?;
+                Ok(HttpResponse { status, body })
             }
             Err(ureq::Error::Status(code, resp)) => {
                 let mut body = String::new();
@@ -65,11 +63,17 @@ fn default_executor(timeout: Duration) -> RequestExecutor {
                 } else {
                     AiErrorKind::Other
                 };
-                Err(AiError::new(kind, format!("HTTP {code}: {body}"), Some(code as u16)))
+                Err(AiError::new(
+                    kind,
+                    format!("HTTP {code}: {body}"),
+                    Some(code),
+                ))
             }
-            Err(ureq::Error::Transport(e)) => {
-                Err(AiError::new(AiErrorKind::Network, format!("transport: {e}"), None))
-            }
+            Err(ureq::Error::Transport(e)) => Err(AiError::new(
+                AiErrorKind::Network,
+                format!("transport: {e}"),
+                None,
+            )),
         }
     })
 }
@@ -109,9 +113,8 @@ pub fn http_request_with_retry(
             }
         }
     }
-    Err(last_err.unwrap_or_else(|| {
-        AiError::new(AiErrorKind::Other, "no attempts made".to_string(), None)
-    }))
+    Err(last_err
+        .unwrap_or_else(|| AiError::new(AiErrorKind::Other, "no attempts made".to_string(), None)))
 }
 
 /// 公开入口：用默认 ureq 执行器发带重试的请求。

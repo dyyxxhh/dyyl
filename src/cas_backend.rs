@@ -46,17 +46,17 @@ pub enum CasBackend {
 /// # Panics
 /// Panics only if mathcore's own public API panics.
 pub fn probe() -> ProbeResult {
-    let mut checks = Vec::new();
-
-    checks.push(check_parse_rational());
-    checks.push(check_exact_rational());
-    checks.push(check_constant_pi());
-    checks.push(check_sqrt());
-    checks.push(check_trig_special());
-    checks.push(check_approximate());
-    checks.push(check_expression_inspection());
-    checks.push(check_constant_e());
-    checks.push(check_constant_tau());
+    let checks = vec![
+        check_parse_rational(),
+        check_exact_rational(),
+        check_constant_pi(),
+        check_sqrt(),
+        check_trig_special(),
+        check_approximate(),
+        check_expression_inspection(),
+        check_constant_e(),
+        check_constant_tau(),
+    ];
 
     let all_pass = checks.iter().all(|c| c.passed);
     let backend = if all_pass {

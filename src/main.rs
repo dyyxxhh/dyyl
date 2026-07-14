@@ -57,13 +57,14 @@ fn main() {
     let mut script_args: Vec<String> = Vec::new();
     let mut i = 1;
     while i < args.len() {
+        let Some(arg) = args.get(i) else { break };
         // 一旦看到 filename,后续所有 args 都转发给脚本
         if filename.is_some() {
-            script_args.push(args[i].clone());
+            script_args.push(arg.clone());
             i += 1;
             continue;
         }
-        match args[i].as_str() {
+        match arg.as_str() {
             "--debug" => debug = true,
             "--host-json" => host_json = true,
             "--lang" => {
@@ -86,7 +87,7 @@ fn main() {
             }
             other if !other.starts_with('-') => filename = Some(other.to_string()),
             _ => {
-                eprintln!("dyyl: unknown option '{}'", args[i]);
+                eprintln!("dyyl: unknown option '{}'", arg);
                 eprintln!("Usage: dyyl [--debug] [--host-json] [--lang <en|zh>] <filename>");
                 process::exit(1);
             }

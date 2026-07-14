@@ -59,7 +59,7 @@ fn format_proper_fraction(n: i64, d: i64) -> String {
         .to_string()
         .chars()
         .map(|c| match c.to_digit(10) {
-            Some(d) => VULGAR_NUM[d as usize],
+            Some(d) => VULGAR_NUM.get(d as usize).copied().unwrap_or('?'),
             None => '?',
         })
         .collect();
@@ -67,7 +67,7 @@ fn format_proper_fraction(n: i64, d: i64) -> String {
         .to_string()
         .chars()
         .map(|c| match c.to_digit(10) {
-            Some(d) => VULGAR_DEN[d as usize],
+            Some(d) => VULGAR_DEN.get(d as usize).copied().unwrap_or('?'),
             None => '?',
         })
         .collect();
@@ -112,11 +112,7 @@ impl fmt::Display for CasNumber {
                     return write!(f, "{proper}");
                 }
                 // Proper fraction
-                if is_vulgar_available(num, den) {
-                    write!(f, "{}", format_proper_fraction(num, den))
-                } else {
-                    write!(f, "{}", format_proper_fraction(num, den))
-                }
+                write!(f, "{}", format_proper_fraction(num, den))
             }
             Self::Sqrt(inner) => {
                 let inner_str = inner.to_string();

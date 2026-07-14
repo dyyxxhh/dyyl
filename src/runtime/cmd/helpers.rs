@@ -7,8 +7,8 @@ use crate::runtime::value::Value;
 
 pub(crate) fn resolve_var_name(expr: &Expr, ctx: &ExecContext) -> Result<String, RuntimeError> {
     match expr {
-        Expr::Param(s) => Ok(if s.starts_with('$') {
-            s[1..].to_string()
+        Expr::Param(s) => Ok(if let Some(rest) = s.strip_prefix('$') {
+            rest.to_string()
         } else {
             s.clone()
         }),
@@ -27,8 +27,8 @@ pub(crate) fn resolve_container(
 ) -> Result<Value, RuntimeError> {
     let name = match expr {
         Expr::Param(s) => {
-            if s.starts_with('$') {
-                s[1..].to_string()
+            if let Some(rest) = s.strip_prefix('$') {
+                rest.to_string()
             } else {
                 s.clone()
             }

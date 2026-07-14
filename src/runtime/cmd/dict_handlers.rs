@@ -19,7 +19,12 @@ pub(crate) fn handle_dict_create(
             i18n::cmd_requires_var(ctx.lang.get(), "dict.create"),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
     env.set(&name, Value::Dict(Vec::new()));
     Ok(Value::Empty)
 }
@@ -36,9 +41,26 @@ pub(crate) fn handle_dict_set(
             i18n::requires_n_args(ctx.lang.get(), 3),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
-    let key = eval_expr(&call.args[1], env, ctx)?;
-    let val = eval_expr(&call.args[2], env, ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
+    let key = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let val = eval_expr(
+        call.args
+            .get(2)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     let mut pairs = match env.get(&name) {
         Some(Value::Dict(p)) => p.clone(),
         _ => {
@@ -67,8 +89,20 @@ pub(crate) fn handle_dict_get(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let dict_val = resolve_container(&call.args[0], env, ctx)?;
-    let key_val = eval_expr(&call.args[1], env, ctx)?;
+    let dict_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let key_val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match dict_val {
         Value::Dict(pairs) => {
             for (k, v) in &pairs {
@@ -106,8 +140,20 @@ pub(crate) fn handle_dict_has(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let dict_val = resolve_container(&call.args[0], env, ctx)?;
-    let key_val = eval_expr(&call.args[1], env, ctx)?;
+    let dict_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
+    let key_val = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match dict_val {
         Value::Dict(pairs) => {
             let found = pairs.iter().any(|(k, _)| *k == key_val);
@@ -133,8 +179,19 @@ pub(crate) fn handle_dict_del(
             i18n::requires_n_args(ctx.lang.get(), 2),
         ));
     }
-    let name = resolve_var_name(&call.args[0], ctx)?;
-    let key = eval_expr(&call.args[1], env, ctx)?;
+    let name = resolve_var_name(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        ctx,
+    )?;
+    let key = eval_expr(
+        call.args
+            .get(1)
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match env.get(&name) {
         Some(Value::Dict(pairs)) => {
             let mut new_pairs = pairs.clone();
@@ -162,7 +219,13 @@ pub(crate) fn handle_dict_keys(
             i18n::cmd_requires_container(ctx.lang.get(), "dict.keys", "dict"),
         ));
     }
-    let dict_val = resolve_container(&call.args[0], env, ctx)?;
+    let dict_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match dict_val {
         Value::Dict(pairs) => Ok(Value::List(pairs.iter().map(|(k, _)| k.clone()).collect())),
         _ => Err(RuntimeError::new(
@@ -185,7 +248,13 @@ pub(crate) fn handle_dict_vals(
             i18n::cmd_requires_container(ctx.lang.get(), "dict.vals", "dict"),
         ));
     }
-    let dict_val = resolve_container(&call.args[0], env, ctx)?;
+    let dict_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match dict_val {
         Value::Dict(pairs) => Ok(Value::List(pairs.iter().map(|(_, v)| v.clone()).collect())),
         _ => Err(RuntimeError::new(
@@ -208,7 +277,13 @@ pub(crate) fn handle_dict_len(
             i18n::cmd_requires_container(ctx.lang.get(), "dict.len", "dict"),
         ));
     }
-    let dict_val = resolve_container(&call.args[0], env, ctx)?;
+    let dict_val = resolve_container(
+        call.args
+            .first()
+            .ok_or_else(|| RuntimeError::new(ctx.line, &call.command, "missing argument"))?,
+        env,
+        ctx,
+    )?;
     match dict_val {
         Value::Dict(pairs) => Ok(Value::Num(pairs.len() as i64)),
         _ => Err(RuntimeError::new(

@@ -7,16 +7,11 @@
 // ── Language enum ────────────────────────────────────────────────────
 
 /// Supported UI languages.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Lang {
+    #[default]
     En,
     Zh,
-}
-
-impl Default for Lang {
-    fn default() -> Self {
-        Self::En
-    }
 }
 
 impl Lang {

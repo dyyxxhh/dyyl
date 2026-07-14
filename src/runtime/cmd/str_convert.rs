@@ -87,21 +87,49 @@ fn do_from_num(sc: &mut StrCtx) -> Result<Value, RuntimeError> {
 const B64_TABLE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 fn base64_encode(data: &[u8]) -> String {
-    let mut result = String::with_capacity((data.len() + 2) / 3 * 4);
+    let mut result = String::with_capacity(data.len().div_ceil(3) * 4);
     for chunk in data.chunks(3) {
-        let b0 = chunk[0] as u32;
-        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
-        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
+        let b0 = chunk.first().copied().unwrap_or(0) as u32;
+        let b1 = if chunk.len() > 1 {
+            chunk.get(1).copied().unwrap_or(0) as u32
+        } else {
+            0
+        };
+        let b2 = if chunk.len() > 2 {
+            chunk.get(2).copied().unwrap_or(0) as u32
+        } else {
+            0
+        };
         let triple = (b0 << 16) | (b1 << 8) | b2;
-        result.push(B64_TABLE[((triple >> 18) & 0x3F) as usize] as char);
-        result.push(B64_TABLE[((triple >> 12) & 0x3F) as usize] as char);
+        result.push(
+            B64_TABLE
+                .get(((triple >> 18) & 0x3F) as usize)
+                .copied()
+                .unwrap_or(0) as char,
+        );
+        result.push(
+            B64_TABLE
+                .get(((triple >> 12) & 0x3F) as usize)
+                .copied()
+                .unwrap_or(0) as char,
+        );
         if chunk.len() > 1 {
-            result.push(B64_TABLE[((triple >> 6) & 0x3F) as usize] as char);
+            result.push(
+                B64_TABLE
+                    .get(((triple >> 6) & 0x3F) as usize)
+                    .copied()
+                    .unwrap_or(0) as char,
+            );
         } else {
             result.push('=');
         }
         if chunk.len() > 2 {
-            result.push(B64_TABLE[(triple & 0x3F) as usize] as char);
+            result.push(
+                B64_TABLE
+                    .get((triple & 0x3F) as usize)
+                    .copied()
+                    .unwrap_or(0) as char,
+            );
         } else {
             result.push('=');
         }
@@ -111,7 +139,7 @@ fn base64_encode(data: &[u8]) -> String {
 
 fn base64_decode(s: &str) -> Result<Vec<u8>, ()> {
     let s: String = s.chars().filter(|c| !c.is_whitespace()).collect();
-    if s.len() % 4 != 0 {
+    if !s.len().is_multiple_of(4) {
         return Err(());
     }
     let mut result = Vec::with_capacity(s.len() * 3 / 4);
@@ -131,12 +159,15 @@ fn base64_decode(s: &str) -> Result<Vec<u8>, ()> {
         if vals.len() != 4 {
             return Err(());
         }
-        let triple = (vals[0] << 18) | (vals[1] << 12) | (vals[2] << 6) | vals[3];
+        let triple = (vals.first().copied().unwrap_or(0) << 18)
+            | (vals.get(1).copied().unwrap_or(0) << 12)
+            | (vals.get(2).copied().unwrap_or(0) << 6)
+            | vals.get(3).copied().unwrap_or(0);
         result.push((triple >> 16) as u8);
-        if chunk[2] != b'=' {
+        if chunk.get(2).copied().unwrap_or(0) != b'=' {
             result.push((triple >> 8) as u8);
         }
-        if chunk[3] != b'=' {
+        if chunk.get(3).copied().unwrap_or(0) != b'=' {
             result.push(triple as u8);
         }
     }
@@ -166,10 +197,10 @@ fn url_decode(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
-        match bytes[i] {
+        match bytes.get(i).copied().unwrap_or(0) {
             b'%' if i + 2 < bytes.len() => {
-                let hi = hex_digit(bytes[i + 1]);
-                let lo = hex_digit(bytes[i + 2]);
+                let hi = hex_digit(bytes.get(i + 1).copied().unwrap_or(0));
+                let lo = hex_digit(bytes.get(i + 2).copied().unwrap_or(0));
                 if let (Some(h), Some(l)) = (hi, lo) {
                     decoded.push(h * 16 + l);
                     i += 3;
