@@ -265,3 +265,22 @@ pub fn ensure_ai(path: &Path, lang: Lang) -> Result<AiCredentials, String> {
     }
     ensure_ai_interactive(path, lang)
 }
+
+/// Return the per-plugin credentials directory under XDG data:
+/// `<xdg_data>/dyyl/credentials.d/<plugin_name>/`.
+///
+/// Used for `type: "file"` and `type: "directory"` credential fields
+/// that may hold large or dynamic blobs (e.g. `OpenPGP` keys).
+/// Does NOT create the directory; callers create on demand with 0700.
+///
+/// # Panics
+///
+/// Panics if the XDG data directory cannot be determined (e.g. no valid home).
+#[must_use]
+pub fn credentials_dir_for_plugin(plugin_name: &str) -> std::path::PathBuf {
+    let proj = directories::ProjectDirs::from("dev", "lucky", "dyyl")
+        .expect("unable to determine XDG data directory");
+    proj.data_dir()
+        .join("credentials.d")
+        .join(plugin_name)
+}

@@ -96,3 +96,11 @@ fn prompt_ai_empty_api_key_returns_error() {
     ];
     assert!(prompt_ai_from_lines(&lines).is_err());
 }
+
+#[test]
+fn credentials_dir_for_plugin_returns_xdg_data_path() {
+    std::env::set_var("XDG_DATA_HOME", "/tmp/dyyl-test-xdg");
+    let dir = dyyl::credentials::credentials_dir_for_plugin("openpgp");
+    assert!(dir.ends_with("dyyl/credentials.d/openpgp"));
+    std::env::remove_var("XDG_DATA_HOME");
+}
