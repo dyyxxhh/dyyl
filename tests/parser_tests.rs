@@ -115,11 +115,38 @@ fn parser_handles_greedy_rhs_and_disambiguation() {
     }
     assert_eq!(p_cmds[0].call.args[1], Expr::Num(3));
 
-    // --- Left ambiguity errors ---
+    // --- Left-nested calls: arity disambiguation ---
 
-    // `math.add math.add 1, 2, 3` — both have arity 2, left-most param is command
-    // without parens => ambiguous
-    let ambiguous = parser::parse_source("math.add math.add 1, 2, 3");
+    // `math.add math.add 1, 2, 3` — both have arity 2; when there are enough
+    // tokens to satisfy both the inner arity and the outer greedy param, the
+    // parser resolves the left-nested call without parens:
+    // math.add(math.add(1, 2), 3).
+    let resolved = parser::parse_source("math.add math.add 1, 2, 3");
+    assert!(
+        resolved.is_ok(),
+        "left-nested call with enough tokens should resolve by arity: {:?}",
+        resolved
+    );
+    let r_cmds = resolved.unwrap();
+    assert_eq!(r_cmds[0].call.command, "math.add");
+    assert_eq!(r_cmds[0].call.args.len(), 2);
+    match &r_cmds[0].call.args[0] {
+        Expr::Call(inner) => {
+            assert_eq!(inner.command, "math.add");
+            assert_eq!(inner.args.len(), 2);
+            assert_eq!(inner.args[0], Expr::Num(1));
+            assert_eq!(inner.args[1], Expr::Num(2));
+        }
+        other => panic!("expected inner Call, got {other:?}"),
+    }
+    assert_eq!(r_cmds[0].call.args[1], Expr::Num(3));
+
+    // --- Left ambiguity errors (not enough tokens to disambiguate) ---
+
+    // `math.add math.add 1, 2` — both have arity 2, but only two tokens follow
+    // the inner command: not enough to feed the inner arity (2) and still leave
+    // a token for the outer greedy param => genuinely ambiguous, must error.
+    let ambiguous = parser::parse_source("math.add math.add 1, 2");
     assert!(ambiguous.is_err(), "left-ambiguous should produce an error");
     let err = ambiguous.unwrap_err();
     assert!(
