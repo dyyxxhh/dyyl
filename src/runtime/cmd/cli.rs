@@ -4,6 +4,8 @@
 //! Provides read-only access to command-line arguments passed after the
 //! script filename. Args are stored in Env (set by main.rs via execute.rs).
 
+use std::path::Path;
+
 use crate::i18n;
 use crate::parser::types::Call;
 use crate::runtime::env::Env;
@@ -156,14 +158,66 @@ fn handle_cli_has(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value
     Ok(Value::Num(if found { 1 } else { 0 }))
 }
 
-fn handle_cli_value(_call: &Call, _env: &mut Env, _ctx: &ExecContext) -> Result<Value, RuntimeError> {
+/// `cli.value <flag>` — return the value for `--flag value` or `--flag=value`.
+/// Returns Empty if flag not found or flag has no value. First occurrence wins.
+fn handle_cli_value(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value, RuntimeError> {
+    if call.args.len() != 1 {
+        return Err(RuntimeError::new(
+            ctx.line,
+            &call.command,
+            i18n::requires_n_args(ctx.lang.get(), 1),
+        ));
+    }
+    let val = eval_expr(&call.args[0], env, ctx)?;
+    let flag = match val {
+        Value::Str(s) => s,
+        Value::Num(n) => n.to_string(),
+        Value::Expr(e) => e.to_string(),
+        other => {
+            return Err(RuntimeError::new(
+                ctx.line,
+                &call.command,
+                i18n::expected_string(ctx.lang.get(), &other),
+            ));
+        }
+    };
+    let args = env.script_args();
+    let eq_prefix = format!("{flag}=");
+    let mut iter = args.iter().enumerate();
+    while let Some((i, arg)) = iter.next() {
+        // --flag=value 形式
+        if let Some(rest) = arg.strip_prefix(&eq_prefix) {
+            return Ok(Value::Str(rest.to_string()));
+        }
+        // --flag value 形式(空格分隔):当前 token 精确等于 flag,下一个 token 是值
+        if arg == &flag {
+            match args.get(i + 1) {
+                Some(next) if !next.starts_with('-') => {
+                    return Ok(Value::Str(next.clone()));
+                }
+                _ => return Ok(Value::Empty), // flag 后无值
+            }
+        }
+    }
     Ok(Value::Empty)
 }
 
+/// `cli.script_name` — return the basename of the script file.
 fn handle_cli_script_name(
-    _call: &Call,
-    _env: &Env,
-    _ctx: &ExecContext,
+    call: &Call,
+    env: &Env,
+    ctx: &ExecContext,
 ) -> Result<Value, RuntimeError> {
-    Ok(Value::Str(String::new()))
+    if !call.args.is_empty() {
+        return Err(RuntimeError::new(
+            ctx.line,
+            &call.command,
+            i18n::requires_n_args(ctx.lang.get(), 0),
+        ));
+    }
+    let basename = Path::new(env.script_name())
+        .file_name()
+        .map(|os| os.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    Ok(Value::Str(basename))
 }

@@ -49,3 +49,19 @@ fn cli_has_returns_zero_when_no_args() {
     assert_eq!(out.values.len(), 1);
     assert_eq!(out.values[0], Value::Num(0));
 }
+
+#[test]
+fn cli_value_not_found_returns_empty() {
+    let src = "io.out cli.value(\"--out\")\n";
+    let out = run_script_with_lang(src, false, Lang::En);
+    assert_eq!(out.values.len(), 1);
+    assert_eq!(out.values[0], Value::Empty);
+}
+
+#[test]
+fn cli_script_name_empty_when_not_injected() {
+    let src = "io.out cli.script_name\n";
+    let out = run_script_with_lang(src, false, Lang::En);
+    assert_eq!(out.values.len(), 1);
+    assert_eq!(out.values[0], Value::Str(String::new()));
+}
