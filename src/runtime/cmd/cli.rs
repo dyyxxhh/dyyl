@@ -100,12 +100,7 @@ fn handle_cli_get(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value
     };
     if idx < 0 {
         if ctx.debug {
-            eprintln!(
-                "line {}: {}: negative index {}",
-                ctx.line,
-                ctx.text,
-                idx
-            );
+            eprintln!("line {}: {}: negative index {}", ctx.line, ctx.text, idx);
         }
         return Ok(Value::Num(-1));
     }

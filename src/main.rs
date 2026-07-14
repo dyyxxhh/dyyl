@@ -132,7 +132,12 @@ fn main() {
     if host_json {
         let host = Arc::new(StdioHostConnection::new());
         let output = run_script_with_lang_and_host_and_args(
-            &source, debug, lang, Some(host), script_args, script_name,
+            &source,
+            debug,
+            lang,
+            Some(host),
+            script_args,
+            script_name,
         );
         if !output.error.is_empty() {
             eprintln!("dyyl: {}", output.error);
