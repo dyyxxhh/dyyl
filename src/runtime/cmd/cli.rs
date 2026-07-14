@@ -125,8 +125,35 @@ fn handle_cli_get(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value
     }
 }
 
-fn handle_cli_has(_call: &Call, _env: &mut Env, _ctx: &ExecContext) -> Result<Value, RuntimeError> {
-    Ok(Value::Num(0))
+/// `cli.has <flag>` — return 1 if flag present (exact match, or `--flag=...`
+/// form counts), else 0. No prefix matching.
+fn handle_cli_has(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value, RuntimeError> {
+    if call.args.len() != 1 {
+        return Err(RuntimeError::new(
+            ctx.line,
+            &call.command,
+            i18n::requires_n_args(ctx.lang.get(), 1),
+        ));
+    }
+    let val = eval_expr(&call.args[0], env, ctx)?;
+    let flag = match val {
+        Value::Str(s) => s,
+        Value::Num(n) => n.to_string(),
+        Value::Expr(e) => e.to_string(),
+        other => {
+            return Err(RuntimeError::new(
+                ctx.line,
+                &call.command,
+                i18n::expected_string(ctx.lang.get(), &other),
+            ));
+        }
+    };
+    let eq_prefix = format!("{flag}=");
+    let found = env.script_args().iter().any(|arg| {
+        // 精确匹配,或 --flag=value 形式(--flag 部分相等)
+        arg == &flag || arg.strip_prefix(&eq_prefix).is_some()
+    });
+    Ok(Value::Num(if found { 1 } else { 0 }))
 }
 
 fn handle_cli_value(_call: &Call, _env: &mut Env, _ctx: &ExecContext) -> Result<Value, RuntimeError> {

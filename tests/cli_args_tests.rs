@@ -41,3 +41,11 @@ fn cli_get_negative_returns_minus_one() {
     assert_eq!(out.values.len(), 1);
     assert_eq!(out.values[0], Value::Num(-1));
 }
+
+#[test]
+fn cli_has_returns_zero_when_no_args() {
+    let src = "io.out cli.has(\"--help\")\n";
+    let out = run_script_with_lang(src, false, Lang::En);
+    assert_eq!(out.values.len(), 1);
+    assert_eq!(out.values[0], Value::Num(0));
+}
