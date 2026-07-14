@@ -1,10 +1,22 @@
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 //! Integration tests for the OpenPGP plugin via raw dlopen (libloading).
 //!
 //! These tests build the plugin via tests/fixtures/build-openpgp.sh, then
 //! load the .so directly and exercise the 15 ABI symbols.
-
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::panic)]
 
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_uint, c_void};
@@ -56,7 +68,11 @@ fn build_plugin() -> PathBuf {
 /// The tempdir must be held alive for the duration of the test.
 fn make_creds_dir() -> (TempDir, PathBuf) {
     let dir = tempfile::tempdir().expect("create tempdir");
-    let creds_dir = dir.path().join("dyyl").join("credentials.d").join("openpgp");
+    let creds_dir = dir
+        .path()
+        .join("dyyl")
+        .join("credentials.d")
+        .join("openpgp");
     std::fs::create_dir_all(&creds_dir).expect("create creds dir");
     (dir, creds_dir)
 }
@@ -80,22 +96,25 @@ fn test_abi_load_and_resolve_all_symbols() {
 
     // Resolve all 15 symbols
     unsafe {
-        let _get_api_version: Symbol<unsafe extern "C" fn() -> c_uint> =
-            lib.get(b"dyyl_plugin_get_api_version").expect("get_api_version");
+        let _get_api_version: Symbol<unsafe extern "C" fn() -> c_uint> = lib
+            .get(b"dyyl_plugin_get_api_version")
+            .expect("get_api_version");
         let _get_name: Symbol<unsafe extern "C" fn(*mut *mut c_char) -> c_int> =
             lib.get(b"dyyl_plugin_get_name").expect("get_name");
         let _get_version: Symbol<unsafe extern "C" fn(*mut *mut c_char) -> c_int> =
             lib.get(b"dyyl_plugin_get_version").expect("get_version");
         let _get_author: Symbol<unsafe extern "C" fn(*mut *mut c_char) -> c_int> =
             lib.get(b"dyyl_plugin_get_author").expect("get_author");
-        let _get_description: Symbol<unsafe extern "C" fn(*mut *mut c_char) -> c_int> =
-            lib.get(b"dyyl_plugin_get_description").expect("get_description");
+        let _get_description: Symbol<unsafe extern "C" fn(*mut *mut c_char) -> c_int> = lib
+            .get(b"dyyl_plugin_get_description")
+            .expect("get_description");
         let _init: Symbol<unsafe extern "C" fn(c_uint) -> *mut c_void> =
             lib.get(b"dyyl_plugin_init").expect("init");
         let _on_load: Symbol<unsafe extern "C" fn(*mut c_void) -> c_int> =
             lib.get(b"dyyl_plugin_on_load").expect("on_load");
         let _list_commands: Symbol<unsafe extern "C" fn(*mut c_void, *mut *mut c_char) -> c_int> =
-            lib.get(b"dyyl_plugin_list_commands").expect("list_commands");
+            lib.get(b"dyyl_plugin_list_commands")
+                .expect("list_commands");
         let _get_command_help: Symbol<
             unsafe extern "C" fn(*mut c_void, *const c_char, *mut *mut c_char) -> c_int,
         > = lib
@@ -108,7 +127,9 @@ fn test_abi_load_and_resolve_all_symbols() {
                 *const c_char,
                 *mut *mut c_char,
             ) -> c_int,
-        > = lib.get(b"dyyl_plugin_handle_command").expect("handle_command");
+        > = lib
+            .get(b"dyyl_plugin_handle_command")
+            .expect("handle_command");
         let _on_error: Symbol<
             unsafe extern "C" fn(*mut c_void, *const c_char, c_int, *const c_char) -> c_int,
         > = lib.get(b"dyyl_plugin_on_error").expect("on_error");
@@ -119,7 +140,8 @@ fn test_abi_load_and_resolve_all_symbols() {
         let _free_string: Symbol<unsafe extern "C" fn(*mut c_char)> =
             lib.get(b"dyyl_plugin_free_string").expect("free_string");
         let _set_credentials: Symbol<unsafe extern "C" fn(*mut c_void, *const c_char) -> c_int> =
-            lib.get(b"dyyl_plugin_set_credentials").expect("set_credentials");
+            lib.get(b"dyyl_plugin_set_credentials")
+                .expect("set_credentials");
     }
 
     println!("All 15 ABI symbols resolved successfully");
@@ -132,8 +154,9 @@ fn test_get_api_version_returns_2() {
     let lib = unsafe { Library::new(&lib_path) }.expect("dlopen plugin");
 
     unsafe {
-        let get_api_version: Symbol<unsafe extern "C" fn() -> c_uint> =
-            lib.get(b"dyyl_plugin_get_api_version").expect("get_api_version");
+        let get_api_version: Symbol<unsafe extern "C" fn() -> c_uint> = lib
+            .get(b"dyyl_plugin_get_api_version")
+            .expect("get_api_version");
         let version = get_api_version();
         assert_eq!(version, 2, "API version should be 2");
     }
@@ -198,7 +221,8 @@ fn test_set_credentials_and_on_load() {
         let init: Symbol<unsafe extern "C" fn(c_uint) -> *mut c_void> =
             lib.get(b"dyyl_plugin_init").expect("init");
         let set_credentials: Symbol<unsafe extern "C" fn(*mut c_void, *const c_char) -> c_int> =
-            lib.get(b"dyyl_plugin_set_credentials").expect("set_credentials");
+            lib.get(b"dyyl_plugin_set_credentials")
+                .expect("set_credentials");
         let on_load: Symbol<unsafe extern "C" fn(*mut c_void) -> c_int> =
             lib.get(b"dyyl_plugin_on_load").expect("on_load");
         let shutdown: Symbol<unsafe extern "C" fn(*mut c_void)> =
@@ -234,7 +258,8 @@ fn test_handle_command_key_generate() {
         let init: Symbol<unsafe extern "C" fn(c_uint) -> *mut c_void> =
             lib.get(b"dyyl_plugin_init").expect("init");
         let set_credentials: Symbol<unsafe extern "C" fn(*mut c_void, *const c_char) -> c_int> =
-            lib.get(b"dyyl_plugin_set_credentials").expect("set_credentials");
+            lib.get(b"dyyl_plugin_set_credentials")
+                .expect("set_credentials");
         let on_load: Symbol<unsafe extern "C" fn(*mut c_void) -> c_int> =
             lib.get(b"dyyl_plugin_on_load").expect("on_load");
         let handle_command: Symbol<
@@ -244,7 +269,9 @@ fn test_handle_command_key_generate() {
                 *const c_char,
                 *mut *mut c_char,
             ) -> c_int,
-        > = lib.get(b"dyyl_plugin_handle_command").expect("handle_command");
+        > = lib
+            .get(b"dyyl_plugin_handle_command")
+            .expect("handle_command");
         let free_string: Symbol<unsafe extern "C" fn(*mut c_char)> =
             lib.get(b"dyyl_plugin_free_string").expect("free_string");
         let shutdown: Symbol<unsafe extern "C" fn(*mut c_void)> =
@@ -294,7 +321,11 @@ fn test_handle_command_key_generate() {
             .get("value")
             .and_then(|v| v.as_str())
             .expect("extract fingerprint");
-        assert_eq!(fp.len(), 40, "fingerprint should be 40 hex chars, got: {fp}");
+        assert_eq!(
+            fp.len(),
+            40,
+            "fingerprint should be 40 hex chars, got: {fp}"
+        );
         assert!(
             fp.chars().all(|c| c.is_ascii_hexdigit()),
             "fingerprint should be hex"
@@ -314,7 +345,8 @@ fn test_list_commands_returns_30_commands() {
         let init: Symbol<unsafe extern "C" fn(c_uint) -> *mut c_void> =
             lib.get(b"dyyl_plugin_init").expect("init");
         let list_commands: Symbol<unsafe extern "C" fn(*mut c_void, *mut *mut c_char) -> c_int> =
-            lib.get(b"dyyl_plugin_list_commands").expect("list_commands");
+            lib.get(b"dyyl_plugin_list_commands")
+                .expect("list_commands");
         let free_string: Symbol<unsafe extern "C" fn(*mut c_char)> =
             lib.get(b"dyyl_plugin_free_string").expect("free_string");
         let shutdown: Symbol<unsafe extern "C" fn(*mut c_void)> =
@@ -351,7 +383,10 @@ fn test_list_commands_returns_30_commands() {
             names.contains(&"gpg.detect".to_string()),
             "should have gpg.detect"
         );
-        assert!(names.contains(&"encrypt".to_string()), "should have encrypt");
+        assert!(
+            names.contains(&"encrypt".to_string()),
+            "should have encrypt"
+        );
         assert!(names.contains(&"armor".to_string()), "should have armor");
 
         shutdown(handle);
@@ -374,7 +409,9 @@ fn test_handle_command_unknown_returns_error() {
                 *const c_char,
                 *mut *mut c_char,
             ) -> c_int,
-        > = lib.get(b"dyyl_plugin_handle_command").expect("handle_command");
+        > = lib
+            .get(b"dyyl_plugin_handle_command")
+            .expect("handle_command");
         let free_string: Symbol<unsafe extern "C" fn(*mut c_char)> =
             lib.get(b"dyyl_plugin_free_string").expect("free_string");
         let shutdown: Symbol<unsafe extern "C" fn(*mut c_void)> =

@@ -1,3 +1,18 @@
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 use dyyl::prepass::scan_placeholders;
 
 #[test]
@@ -167,7 +182,7 @@ fn reset_filled_no_change_if_no_filled() {
     assert_eq!(result, content);
 }
 
-use dyyl::prepass::{run, build_only};
+use dyyl::prepass::{build_only, run};
 use std::fs;
 use tempfile::tempdir;
 

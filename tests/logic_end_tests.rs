@@ -1,8 +1,23 @@
-use dyyl::runtime::execute::scan_open_blocks;
-use dyyl::runtime::execute::run_script;
-use dyyl::parser::parse_source;
-use dyyl::runtime::Value;
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 use dyyl::math::CasNumber;
+use dyyl::parser::parse_source;
+use dyyl::runtime::execute::run_script;
+use dyyl::runtime::execute::scan_open_blocks;
+use dyyl::runtime::Value;
 
 #[test]
 fn scan_open_blocks_finds_matching_end() {
@@ -35,7 +50,10 @@ fn scan_open_blocks_ignores_explicit_line_counts() {
     let src = "logic.if 1, 1\n  io.out a\n";
     let cmds = parse_source(src).expect("parse");
     let map = scan_open_blocks(&cmds);
-    assert!(map.is_empty(), "explicit line count should not be in open-block map");
+    assert!(
+        map.is_empty(),
+        "explicit line count should not be in open-block map"
+    );
 }
 
 #[test]
@@ -60,7 +78,8 @@ fn logic_if_open_block_executes_body() {
     let v = run_script(
         "create.num x\nset $x, 0\nlogic.if 1, _\n  set $x, 42\nlogic.end\nio.out $x\n",
         false,
-    ).values;
+    )
+    .values;
     assert_eq!(v[3], Value::Num(1), "if true returns 1");
     assert_eq!(v[5], Value::Num(42), "body executed");
 }
@@ -70,7 +89,8 @@ fn logic_if_open_block_false_skips_body() {
     let v = run_script(
         "create.num x\nset $x, 0\nlogic.if 0, _\n  set $x, 99\nlogic.end\nio.out $x\n",
         false,
-    ).values;
+    )
+    .values;
     // if false → 体被跳过（不产生体值），故 if 结果紧随 set 之后位于 v[2]；
     // logic.end 仍被执行（匹配，v[3]=1），io.out 落在 v[4]，x 保持 0。
     assert_eq!(v[2], Value::Num(0), "if false returns 0");
@@ -110,19 +130,28 @@ logic.end
 io.out $i
 ",
         false,
-    ).values;
+    )
+    .values;
     // i=0: if false, i=1; i=1: if true i=11, then i=12; 12>=2 stop
     // 注：用 logic.more 而非 logic.same —— logic.same 走 Value PartialEq，
     // 对 math.add 产生的 Value::Expr 视为不等于 Num 字面量（既有语义，非本任务范围）；
     // logic.more 走数值比较，可精确复现上方注释描述的计划意图。
     // if 体在 iter2 执行 → 多一个体值，io.out 落在 v[11]，且经 math.add 为 Expr。
-    assert_eq!(v[11], Value::Expr(CasNumber::Int(12)), "nested open blocks work");
+    assert_eq!(
+        v[11],
+        Value::Expr(CasNumber::Int(12)),
+        "nested open blocks work"
+    );
 }
 
 #[test]
 fn logic_end_without_open_block_returns_sentinel() {
     let v = run_script("logic.end\n", false).values;
-    assert_eq!(v[0], Value::Num(0), "logic.end without open block returns 0");
+    assert_eq!(
+        v[0],
+        Value::Num(0),
+        "logic.end without open block returns 0"
+    );
 }
 
 #[test]
@@ -139,6 +168,7 @@ logic.end
 io.out $x
 ",
         false,
-    ).values;
+    )
+    .values;
     assert_eq!(v[9], Value::Expr(CasNumber::Int(5)), "mixed blocks work");
 }

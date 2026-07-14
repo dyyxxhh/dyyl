@@ -1,3 +1,18 @@
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 use dyyl::ai::{AiError, AiErrorKind, AiProviderKind};
 
 #[test]
@@ -27,9 +42,9 @@ fn ai_error_display() {
 
 // ── Task 4: HTTP client retry tests ──────────────────────────────────
 
-use dyyl::ai::client::{HttpRequest, HttpResponse, http_request_with_retry};
-use std::sync::Arc;
+use dyyl::ai::client::{http_request_with_retry, HttpRequest, HttpResponse};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 #[test]
@@ -170,7 +185,10 @@ fn openai_chat_builds_correct_request_body() {
     let req = provider.build_request("You are helpful", "What is 2+2?");
     assert_eq!(req.method, "POST");
     assert!(req.url.ends_with("/chat/completions"));
-    assert!(req.headers.iter().any(|(k, v)| k == "Authorization" && v == "Bearer sk-test"));
+    assert!(req
+        .headers
+        .iter()
+        .any(|(k, v)| k == "Authorization" && v == "Bearer sk-test"));
     let body: serde_json::Value = serde_json::from_str(&req.body).expect("valid json");
     assert_eq!(body["model"], "gpt-4o-mini");
     assert_eq!(body["messages"][0]["role"], "system");
@@ -219,11 +237,8 @@ use dyyl::ai::provider_openai_response::OpenaiResponseProvider;
 
 #[test]
 fn openai_response_builds_correct_request_body() {
-    let provider = OpenaiResponseProvider::new(
-        "sk-test".to_string(),
-        "gpt-4o".to_string(),
-        String::new(),
-    );
+    let provider =
+        OpenaiResponseProvider::new("sk-test".to_string(), "gpt-4o".to_string(), String::new());
     let req = provider.build_request("Be concise", "Hi");
     assert!(req.url.ends_with("/responses"));
     let body: serde_json::Value = serde_json::from_str(&req.body).expect("json");
@@ -234,11 +249,8 @@ fn openai_response_builds_correct_request_body() {
 
 #[test]
 fn openai_response_parses_output_text() {
-    let provider = OpenaiResponseProvider::new(
-        "sk-test".to_string(),
-        "gpt-4o".to_string(),
-        String::new(),
-    );
+    let provider =
+        OpenaiResponseProvider::new("sk-test".to_string(), "gpt-4o".to_string(), String::new());
     let body = r#"{"output":[{"content":[{"type":"output_text","text":"Hello"}]}]}"#;
     assert_eq!(provider.parse_response(body), Ok("Hello".to_string()));
 }
@@ -256,8 +268,14 @@ fn anthropic_builds_correct_request_body() {
     );
     let req = provider.build_request("You are helpful", "Hi");
     assert_eq!(req.url, "https://api.anthropic.com/v1/messages");
-    assert!(req.headers.iter().any(|(k, v)| k == "x-api-key" && v == "sk-ant"));
-    assert!(req.headers.iter().any(|(k, v)| k == "anthropic-version" && v == "2023-06-01"));
+    assert!(req
+        .headers
+        .iter()
+        .any(|(k, v)| k == "x-api-key" && v == "sk-ant"));
+    assert!(req
+        .headers
+        .iter()
+        .any(|(k, v)| k == "anthropic-version" && v == "2023-06-01"));
     let body: serde_json::Value = serde_json::from_str(&req.body).expect("json");
     assert_eq!(body["model"], "claude-3-5-sonnet-20241022");
     assert_eq!(body["max_tokens"], 4096);
@@ -279,11 +297,8 @@ fn anthropic_parses_content_text() {
 
 #[test]
 fn anthropic_omits_system_when_empty() {
-    let provider = AnthropicProvider::new(
-        "sk-ant".to_string(),
-        "claude".to_string(),
-        String::new(),
-    );
+    let provider =
+        AnthropicProvider::new("sk-ant".to_string(), "claude".to_string(), String::new());
     let req = provider.build_request("", "Hi");
     let body: serde_json::Value = serde_json::from_str(&req.body).expect("json");
     assert!(body.get("system").is_none() || body["system"].as_str() == Some(""));
@@ -297,8 +312,18 @@ use dyyl::ai::prompt::{build_batch, parse_response, Placeholder};
 fn build_batch_marks_placeholders_with_ids() {
     let content = "set $port, ai.auto \"端口常用25565\"\nset $name, ai.auto\n";
     let placeholders = vec![
-        Placeholder { id: 1, line: 1, hint: Some("端口常用25565".to_string()), original_text: "ai.auto \"端口常用25565\"".to_string() },
-        Placeholder { id: 2, line: 2, hint: None, original_text: "ai.auto".to_string() },
+        Placeholder {
+            id: 1,
+            line: 1,
+            hint: Some("端口常用25565".to_string()),
+            original_text: "ai.auto \"端口常用25565\"".to_string(),
+        },
+        Placeholder {
+            id: 2,
+            line: 2,
+            hint: None,
+            original_text: "ai.auto".to_string(),
+        },
     ];
     let (system, user) = build_batch(content, &placeholders);
     assert!(system.contains("filling placeholder values"));

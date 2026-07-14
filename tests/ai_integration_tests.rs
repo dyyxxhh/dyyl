@@ -1,3 +1,18 @@
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 //! End-to-end integration tests for ai.auto fill via prepass.
 //!
 //! These tests spin up a mock HTTP server that emulates the OpenAI Chat
@@ -17,9 +32,7 @@ use tempfile::tempdir;
 static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 fn lock_env() -> MutexGuard<'static, ()> {
-    ENV_LOCK
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
+    ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner())
 }
 
 /// Wrap raw batch-JSON (the AI "content") in an OpenAI Chat Completions
@@ -34,7 +47,8 @@ fn chat_response(batch_json: &str) -> String {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn ai_auto_filled_via_prepass_with_mock_server() {
-    let batch_json = r#"{"1":{"type":"string","value":"Steve"},"2":{"type":"number","value":25565}}"#;
+    let batch_json =
+        r#"{"1":{"type":"string","value":"Steve"},"2":{"type":"number","value":25565}}"#;
     let response = chat_response(batch_json);
     let server = MockAiServer::start(response).await;
     let dir = tempdir().unwrap();
@@ -93,11 +107,7 @@ async fn dyyl_build_resets_and_refills() {
     )
     .unwrap();
     let script_path = dir.path().join("script.dyyl");
-    fs::write(
-        &script_path,
-        "set $x, ai.auto.filled \"hint\", 42\n",
-    )
-    .unwrap();
+    fs::write(&script_path, "set $x, ai.auto.filled \"hint\", 42\n").unwrap();
 
     // --- critical section: env var is process-global -----------------
     let result = {

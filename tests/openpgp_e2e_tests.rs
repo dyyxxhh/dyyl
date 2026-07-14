@@ -1,3 +1,18 @@
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 //! End-to-end tests for the OpenPGP plugin via the full dyyl runtime.
 //!
 //! These tests build the plugin via `build-openpgp.sh`, install it to a
@@ -9,9 +24,6 @@
 //! Unlike `openpgp_plugin_tests.rs` (which dlopens the .so directly), these
 //! tests go through the full dyyl CLI → parser → dispatcher → plugin
 //! manager → dlopen → handle_command pipeline.
-
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::panic)]
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -76,8 +88,8 @@ fn build_plugin_toml() -> String {
         .join("openpgp")
         .join("plugin.toml.in");
 
-    let content = fs::read_to_string(&toml_in)
-        .unwrap_or_else(|e| panic!("read plugin.toml.in: {e}"));
+    let content =
+        fs::read_to_string(&toml_in).unwrap_or_else(|e| panic!("read plugin.toml.in: {e}"));
 
     // Append the [installed] section with dummy metadata.
     format!(
@@ -109,20 +121,17 @@ fn install_plugin() -> TempDir {
         .join("openpgp")
         .join("0.1.0");
 
-    fs::create_dir_all(&version_dir)
-        .unwrap_or_else(|e| panic!("create version_dir: {e}"));
+    fs::create_dir_all(&version_dir).unwrap_or_else(|e| panic!("create version_dir: {e}"));
 
     // Copy the shared library.
     let lib_filename = lib_path.file_name().expect("lib filename");
     let dest_lib = version_dir.join(lib_filename);
-    fs::copy(&lib_path, &dest_lib)
-        .unwrap_or_else(|e| panic!("copy plugin lib: {e}"));
+    fs::copy(&lib_path, &dest_lib).unwrap_or_else(|e| panic!("copy plugin lib: {e}"));
 
     // Write plugin.toml (from .in + [installed] section).
     let toml_content = build_plugin_toml();
     let dest_toml = version_dir.join("plugin.toml");
-    fs::write(&dest_toml, &toml_content)
-        .unwrap_or_else(|e| panic!("write plugin.toml: {e}"));
+    fs::write(&dest_toml, &toml_content).unwrap_or_else(|e| panic!("write plugin.toml: {e}"));
 
     xdg_data
 }
@@ -135,8 +144,7 @@ fn make_credentials_config() -> TempDir {
     let xdg_config = tempfile::tempdir().expect("create xdg_config tempdir");
 
     let dyyl_config_dir = xdg_config.path().join("dyyl");
-    fs::create_dir_all(&dyyl_config_dir)
-        .unwrap_or_else(|e| panic!("create config dir: {e}"));
+    fs::create_dir_all(&dyyl_config_dir).unwrap_or_else(|e| panic!("create config dir: {e}"));
 
     let creds_path = dyyl_config_dir.join("credentials.toml");
     fs::write(
@@ -158,10 +166,7 @@ fn run_dyyl_with_plugin(
     xdg_config: &Path,
 ) -> (i32, String, String) {
     let bin = dyyl_bin();
-    let fixture_path = repo_root()
-        .join("tests")
-        .join("fixtures")
-        .join(fixture);
+    let fixture_path = repo_root().join("tests").join("fixtures").join(fixture);
 
     let output = Command::new(&bin)
         .arg(&fixture_path)
@@ -187,7 +192,10 @@ fn e2e_openpgp_roundtrip() {
     let (code, stdout, stderr) =
         run_dyyl_with_plugin("openpgp-roundtrip.dyyl", xdg_data.path(), xdg_config.path());
 
-    assert_eq!(code, 0, "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}");
+    assert_eq!(
+        code, 0,
+        "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}"
+    );
 
     // The fingerprint (40 hex chars) should be on the first line.
     let lines: Vec<&str> = stdout.lines().collect();
@@ -228,10 +236,16 @@ fn e2e_openpgp_sign_verify() {
     let xdg_data = install_plugin();
     let xdg_config = make_credentials_config();
 
-    let (code, stdout, stderr) =
-        run_dyyl_with_plugin("openpgp-sign-verify.dyyl", xdg_data.path(), xdg_config.path());
+    let (code, stdout, stderr) = run_dyyl_with_plugin(
+        "openpgp-sign-verify.dyyl",
+        xdg_data.path(),
+        xdg_config.path(),
+    );
 
-    assert_eq!(code, 0, "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}");
+    assert_eq!(
+        code, 0,
+        "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}"
+    );
 
     // The script prints dict.get($result, valid) which should be "1".
     let trimmed = stdout.trim();
@@ -251,7 +265,10 @@ fn e2e_openpgp_sym() {
     let (code, stdout, stderr) =
         run_dyyl_with_plugin("openpgp-sym.dyyl", xdg_data.path(), xdg_config.path());
 
-    assert_eq!(code, 0, "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}");
+    assert_eq!(
+        code, 0,
+        "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}"
+    );
 
     // The ciphertext should be an armored PGP message.
     assert!(
@@ -274,10 +291,16 @@ fn e2e_openpgp_gpg_detect() {
     let xdg_data = install_plugin();
     let xdg_config = make_credentials_config();
 
-    let (code, stdout, stderr) =
-        run_dyyl_with_plugin("openpgp-gpg-detect.dyyl", xdg_data.path(), xdg_config.path());
+    let (code, stdout, stderr) = run_dyyl_with_plugin(
+        "openpgp-gpg-detect.dyyl",
+        xdg_data.path(),
+        xdg_config.path(),
+    );
 
-    assert_eq!(code, 0, "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}");
+    assert_eq!(
+        code, 0,
+        "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}"
+    );
 
     // The script prints dict.get($r, installed) which should be "0" or "1".
     let trimmed = stdout.trim();
@@ -294,10 +317,16 @@ fn e2e_openpgp_keyring_persist() {
     let xdg_data = install_plugin();
     let xdg_config = make_credentials_config();
 
-    let (code, stdout, stderr) =
-        run_dyyl_with_plugin("openpgp-keyring-persist.dyyl", xdg_data.path(), xdg_config.path());
+    let (code, stdout, stderr) = run_dyyl_with_plugin(
+        "openpgp-keyring-persist.dyyl",
+        xdg_data.path(),
+        xdg_config.path(),
+    );
 
-    assert_eq!(code, 0, "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}");
+    assert_eq!(
+        code, 0,
+        "exit code must be 0\nstdout: {stdout}\nstderr: {stderr}"
+    );
 
     // The script prints the generated fingerprint, then the fingerprint
     // found via key.list → list.get(0) → dict.get(fp). They should match.

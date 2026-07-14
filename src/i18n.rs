@@ -690,12 +690,15 @@ pub fn warn_mixed_types(lang: Lang) -> &'static str {
 
 // ── MCM host protocol messages ──────────────────────────────────────
 
-/// "mcm command requires a host provider (use --host-json)"
+/// "unknown command: mcm.* requires a host provider (use --host-json)"
+///
+/// Without a host provider, `mcm.*` commands are unknown to the runtime —
+/// they return the unknown-command sentinel (`-1`) with this warning.
 #[must_use]
 pub fn mcm_no_host_provider(lang: Lang) -> &'static str {
     match lang {
-        Lang::En => "mcm command requires a host provider (use --host-json)",
-        Lang::Zh => "mcm 命令需要主机提供者（使用 --host-json）",
+        Lang::En => "unknown command: mcm.* requires a host provider (use --host-json)",
+        Lang::Zh => "未知命令：mcm.* 需要主机提供者（使用 --host-json）",
     }
 }
 

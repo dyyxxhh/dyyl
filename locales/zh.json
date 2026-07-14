@@ -62,7 +62,7 @@
   "debug.invalid_char_offset": "无效字符偏移",
   "debug.mixed_types": "混合类型",
 
-  "mcm.no_host_provider": "mcm 命令需要主机提供者（使用 --host-json）",
+  "mcm.no_host_provider": "未知命令：mcm.* 需要主机提供者（使用 --host-json）",
 
   "plugin.install_success": "已安装 {name} {ver}",
   "plugin.already_installed": "{name} {ver} 已安装",

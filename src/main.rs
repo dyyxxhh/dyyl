@@ -1,3 +1,21 @@
+#![cfg_attr(
+    test,
+    allow(
+        clippy::all,
+        clippy::indexing_slicing,
+        clippy::unwrap_used,
+        clippy::panic,
+        clippy::expect_used,
+        clippy::todo,
+        clippy::unimplemented,
+        clippy::as_underscore,
+        clippy::fn_to_numeric_cast_any,
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::redundant_pub_crate,
+        clippy::missing_const_for_fn,
+    )
+)]
 //! dyyl — scripting language interpreter.
 //!
 //! Usage: `dyyl [--debug] [--host-json] [--lang <en|zh>] <filename>`

@@ -62,7 +62,7 @@
   "debug.invalid_char_offset": "invalid char offset",
   "debug.mixed_types": "mixed types",
 
-  "mcm.no_host_provider": "mcm command requires a host provider (use --host-json)",
+  "mcm.no_host_provider": "unknown command: mcm.* requires a host provider (use --host-json)",
 
   "plugin.install_success": "installed {name} {ver}",
   "plugin.already_installed": "{name} {ver} already installed",

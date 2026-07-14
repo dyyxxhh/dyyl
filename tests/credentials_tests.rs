@@ -1,3 +1,18 @@
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 use dyyl::credentials::{AiCredentials, AiProviderKind, CredentialsFile};
 use tempfile::tempdir;
 
@@ -121,7 +136,8 @@ fn ensure_plugin_credentials_fails_on_eof() {
         secret: true,
         description: "API token".to_string(),
     }];
-    let result = dyyl::credentials::ensure_plugin_credentials(&creds_path, "testplugin", &fields, Lang::En);
+    let result =
+        dyyl::credentials::ensure_plugin_credentials(&creds_path, "testplugin", &fields, Lang::En);
     // In CI (no stdin / EOF), this should fail with "credential input aborted".
     assert!(result.is_err());
     let _ = std::fs::remove_dir_all(&tmpdir);

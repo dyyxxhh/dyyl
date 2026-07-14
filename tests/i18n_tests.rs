@@ -1,3 +1,18 @@
+#![allow(
+    clippy::all,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::expect_used,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::as_underscore,
+    clippy::fn_to_numeric_cast_any,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::redundant_pub_crate,
+    clippy::missing_const_for_fn
+)]
 use dyyl::runtime::execute::run_script;
 use dyyl::runtime::Value;
 
@@ -147,7 +162,7 @@ fn existing_wrappers_produce_same_en_output() {
     assert_eq!(division_by_zero(Lang::En), "division by zero");
     assert_eq!(
         mcm_no_host_provider(Lang::En),
-        "mcm command requires a host provider (use --host-json)"
+        "unknown command: mcm.* requires a host provider (use --host-json)"
     );
     assert_eq!(reason_prefix(Lang::En), "  reason: ");
     assert_eq!(
@@ -174,7 +189,7 @@ fn existing_wrappers_produce_same_zh_output() {
     assert_eq!(division_by_zero(Lang::Zh), "除以零");
     assert_eq!(
         mcm_no_host_provider(Lang::Zh),
-        "mcm 命令需要主机提供者（使用 --host-json）"
+        "未知命令：mcm.* 需要主机提供者（使用 --host-json）"
     );
     assert_eq!(reason_prefix(Lang::Zh), "  原因: ");
     assert_eq!(
