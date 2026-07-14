@@ -6,7 +6,7 @@ license = "AGPL-3.0-or-later"
 
 [lib]
 name = "openpgp"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 sequoia-openpgp = { version = "2", default-features = true, features = ["compression-deflate"] }
@@ -22,6 +22,9 @@ base64 = "0.22"
 panic = "abort"
 opt-level = 3
 lto = true
+
+[dev-dependencies]
+tempfile = "3"
 
 [lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

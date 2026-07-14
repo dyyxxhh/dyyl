@@ -18,8 +18,8 @@ mod codec;
 mod commands;
 mod creds;
 mod error;
-mod keyring;
-mod state;
+pub mod keyring;
+pub mod state;
 
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_uint, c_void};
