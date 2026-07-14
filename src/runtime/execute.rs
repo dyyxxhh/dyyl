@@ -95,6 +95,49 @@ pub fn run_script_with_lang(source: &str, debug: bool, lang: crate::i18n::Lang) 
     ScriptOutput { values }
 }
 
+pub fn run_script_with_lang_and_args(
+    source: &str,
+    debug: bool,
+    lang: crate::i18n::Lang,
+    args: Vec<String>,
+    script_name: String,
+) -> ScriptOutput {
+    let commands = match crate::parser::parse_source(source) {
+        Ok(cmds) => cmds,
+        Err(err) => {
+            println!("-1");
+            if debug {
+                let source_lines: Vec<&str> = source.lines().collect();
+                let cmd = match source_lines.get(err.line.saturating_sub(1)) {
+                    Some(line) => *line,
+                    None => "<end of file>",
+                };
+                eprintln!("line {}: {}", err.line, cmd);
+                eprintln!("{}", err.message);
+            }
+            return ScriptOutput {
+                values: vec![Value::Num(-1)],
+            };
+        }
+    };
+    let mut env = Env::new();
+    env.set_lang(lang);
+    env.set_script_args(args);
+    env.set_script_name(script_name);
+    let mut values = Vec::new();
+    let provider: Arc<dyn IoProvider> = Arc::new(StdIoProvider);
+    exec_commands_range(
+        &commands,
+        0,
+        commands.len(),
+        &mut env,
+        &mut values,
+        debug,
+        &provider,
+    );
+    ScriptOutput { values }
+}
+
 pub fn run_script_with_lang_and_host(
     source: &str,
     debug: bool,
@@ -122,6 +165,56 @@ pub fn run_script_with_lang_and_host(
     };
     let mut env = Env::new();
     env.set_lang(lang);
+    if let Some(h) = host {
+        env.set_host_provider(h);
+    }
+    let mut values = Vec::new();
+    let provider: Arc<dyn IoProvider> = Arc::new(StdIoProvider);
+    let mut error = String::new();
+    exec_commands_range_with_error(
+        &commands,
+        0,
+        commands.len(),
+        &mut env,
+        &mut values,
+        debug,
+        &provider,
+        &mut error,
+    );
+    ScriptOutputWithError { values, error }
+}
+
+pub fn run_script_with_lang_and_host_and_args(
+    source: &str,
+    debug: bool,
+    lang: Lang,
+    host: Option<Arc<dyn HostProvider>>,
+    args: Vec<String>,
+    script_name: String,
+) -> ScriptOutputWithError {
+    let commands = match crate::parser::parse_source(source) {
+        Ok(cmds) => cmds,
+        Err(err) => {
+            let error = if debug {
+                let source_lines: Vec<&str> = source.lines().collect();
+                let cmd = match source_lines.get(err.line.saturating_sub(1)) {
+                    Some(line) => *line,
+                    None => "<end of file>",
+                };
+                format!("line {}: {}\n{}", err.line, cmd, err.message)
+            } else {
+                err.message
+            };
+            return ScriptOutputWithError {
+                values: vec![Value::Num(-1)],
+                error,
+            };
+        }
+    };
+    let mut env = Env::new();
+    env.set_lang(lang);
+    env.set_script_args(args);
+    env.set_script_name(script_name);
     if let Some(h) = host {
         env.set_host_provider(h);
     }
