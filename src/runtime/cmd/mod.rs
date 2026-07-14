@@ -1,6 +1,7 @@
 //! Command dispatch — thin router + per-family handler modules.
 
 pub(crate) mod ai;
+pub(crate) mod cli;
 pub(crate) mod containers;
 pub(crate) mod context;
 pub(crate) mod dict_handlers;

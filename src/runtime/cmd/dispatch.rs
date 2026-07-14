@@ -4,6 +4,7 @@
 //! for nested command expressions (circular dependency).
 
 use super::ai;
+use super::cli;
 use super::containers;
 use super::context::ExecContext;
 use super::file;
@@ -59,6 +60,7 @@ pub(crate) fn dispatch_call(
 
         cmd if cmd.starts_with("user.") => user::handle_user_command(call, env, ctx),
         cmd if cmd.starts_with("system.") => system::handle_system_command(call, env, ctx),
+        cmd if cmd.starts_with("cli.") => cli::handle_cli_command(call, env, ctx),
         cmd if cmd.starts_with("time.") => time_cmd::handle_time_command(call, env, ctx),
 
         cmd if cmd.starts_with("mcm.") => mcm::handle_mcm_command(call, env, ctx),
