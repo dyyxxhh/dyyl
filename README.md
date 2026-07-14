@@ -170,6 +170,10 @@ The complete API reference is maintained in [`dyyl-api-reference.md`](dyyl-api-r
 - MCM host commands
 - return values and sentinel values
 
+## Plugins
+
+dyyl supports native plugins compiled as Rust cdylib crates and loaded via the C ABI. The OpenPGP plugin is a full-featured example providing 30 commands (`openpgp.*`) covering key management, asymmetric/symmetric encryption, signing, verification, and integration with the system `gpg`. For the full plugin development guide, see [插件开发指南](file:///workspace/docs/plugin-development-guide.md).
+
 ## MCM host protocol
 
 When `--host-json` is enabled, dyyl can call `mcm.*` commands through a host process instead of implementing launcher operations itself. The interpreter writes NDJSON requests to stdout and reads NDJSON responses from stdin. Diagnostics remain on stderr.

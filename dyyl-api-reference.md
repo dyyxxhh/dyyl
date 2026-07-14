@@ -365,3 +365,78 @@ io.out dict.get(cache, key)            # (√2)
 | `time.format` | `格式` | 按自定义格式串输出时间（`YYYY`年 `MM`月 `DD`日 `HH`时 `mm`分 `ss`秒，如 `YYYY-MM-DD HH:mm:ss`） |
 | `time.diff` | `时间戳1, 时间戳2` | 计算两个时间戳的差值（秒） |
 | `time.add` | `时间戳, 秒数` | 时间戳加上指定秒数，返回新时间戳 |
+
+---
+
+## openpgp — OpenPGP 插件命令族
+
+> 完整的插件开发讲解与 OpenPGP 插件源码走读，详见 [插件开发指南](file:///workspace/docs/plugin-development-guide.md) 第 11 章。
+
+以下 30 条命令由 `openpgp` 插件提供（ABI v2），脚本中需先确保插件可用。命令分两族：17 条由 sequoia-openpgp 实现的 `openpgp.*` 与 13 条包装系统 `gpg` 的 `openpgp.gpg.*`。
+
+### 密钥管理
+
+| 命令 | 参数 | 说明 | 返回值 |
+|------|------|------|--------|
+| `openpgp.key.generate` | `用户ID, 密码` | 生成新的 Ed25519/Curve25519 密钥对并存入钥匙串 | 密钥指纹 |
+| `openpgp.key.import` | `装甲密钥文本` | 导入装甲公钥/私钥到钥匙串 | 密钥指纹 |
+| `openpgp.key.export` | `指纹, 是否导出私钥` | 从钥匙串导出密钥为装甲文本（私钥标志导出私钥） | 装甲文本 |
+| `openpgp.key.list` | — | 列出钥匙串中所有密钥 | 密钥列表 |
+| `openpgp.key.delete` | `指纹` | 按指纹删除钥匙串中的密钥 | 成功标志 |
+
+### 非对称加密
+
+| 命令 | 参数 | 说明 | 返回值 |
+|------|------|------|--------|
+| `openpgp.encrypt` | `文本, 接收者` | 为一个或多个接收者加密文本（指纹或装甲公钥） | 装甲密文 |
+| `openpgp.encrypt.file` | `输入文件, 输出文件, 接收者` | 加密文件到输出文件 | 成功标志 |
+| `openpgp.decrypt` | `装甲密文` | 解密装甲消息（可用 credentials 中的密码覆盖） | 明文 |
+| `openpgp.decrypt.file` | `输入文件, 输出文件` | 解密装甲文件到输出文件 | 成功标志 |
+
+### 对称加密
+
+| 命令 | 参数 | 说明 | 返回值 |
+|------|------|------|--------|
+| `openpgp.sym.encrypt` | `文本, 密码` | 用密码对称加密文本 | 装甲密文 |
+| `openpgp.sym.decrypt` | `装甲密文, 密码` | 用密码对称解密装甲消息 | 明文 |
+
+### 签名
+
+| 命令 | 参数 | 说明 | 返回值 |
+|------|------|------|--------|
+| `openpgp.sign` | `文本, 指纹` | 用密钥签名文本（内联或分离） | 签名文本 |
+| `openpgp.sign.file` | `输入文件, 输出文件, 指纹` | 签名文件到输出文件（内联或分离） | 成功标志 |
+
+### 验证
+
+| 命令 | 参数 | 说明 | 返回值 |
+|------|------|------|--------|
+| `openpgp.verify` | `签名文本` | 验证签名消息（内联或第二参数为分离签名） | 验证结果 |
+| `openpgp.verify.file` | `签名文件` | 验证签名文件（内联或第二参数为分离签名） | 验证结果 |
+
+### 装甲转换
+
+| 命令 | 参数 | 说明 | 返回值 |
+|------|------|------|--------|
+| `openpgp.armor` | `base64 数据` | 将 base64 二进制转为 ASCII 装甲 | 装甲文本 |
+| `openpgp.dearmor` | `装甲文本` | 将 ASCII 装甲转为 base64 二进制 | base64 数据 |
+
+### 系统 GPG 集成
+
+> 以下 13 条命令包装系统 `gpg` 二进制，需系统已安装 gpg。可用 `openpgp.gpg.detect` 检测。
+
+| 命令 | 参数 | 说明 | 返回值 |
+|------|------|------|--------|
+| `openpgp.gpg.detect` | — | 检测系统 gpg 安装情况 | `{installed, path, version}` |
+| `openpgp.gpg.exec` | `参数` | 执行原始 gpg 命令（参数为字符串或列表） | 输出 |
+| `openpgp.gpg.encrypt` | `文本, 接收者` | 用系统 gpg 加密文本 | 装甲密文 |
+| `openpgp.gpg.encrypt.file` | `输入文件, 输出文件, 接收者` | 用系统 gpg 加密文件 | 成功标志 |
+| `openpgp.gpg.decrypt` | `装甲密文` | 用系统 gpg 解密装甲消息 | 明文 |
+| `openpgp.gpg.decrypt.file` | `输入文件, 输出文件` | 用系统 gpg 解密文件 | 成功标志 |
+| `openpgp.gpg.sign` | `文本, 指纹` | 用系统 gpg 签名文本（内联或分离） | 签名文本 |
+| `openpgp.gpg.sign.file` | `输入文件, 输出文件, 指纹` | 用系统 gpg 签名文件（内联或分离） | 成功标志 |
+| `openpgp.gpg.verify` | `签名文本, 原文` | 用系统 gpg 验证签名（内联或分离） | 验证结果 |
+| `openpgp.gpg.verify.file` | `签名文件, 原文文件` | 用系统 gpg 验证签名文件 | 验证结果 |
+| `openpgp.gpg.key.list` | — | 列出系统 gpg 钥匙串中的密钥 | 密钥列表 |
+| `openpgp.gpg.key.import` | `装甲密钥文本` | 导入装甲密钥到系统 gpg 钥匙串 | 成功标志 |
+| `openpgp.gpg.key.export` | `指纹, 是否导出私钥` | 从系统 gpg 钥匙串导出密钥为装甲文本 | 装甲文本 |
