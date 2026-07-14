@@ -36,6 +36,7 @@ pub fn generate(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue
     let (cert, _revocation) = CertBuilder::new()
         .add_userid(user_id)
         .set_cipher_suite(CipherSuite::Cv25519)
+        .add_storage_encryption_subkey()
         .set_password(passphrase.as_ref().map(|p| Password::from(p.as_bytes())))
         .generate()
         .map_err(|e| PluginError::runtime(format!("key generation failed: {e}")))?;
