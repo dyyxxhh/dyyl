@@ -14,10 +14,10 @@
 // stubs are intentionally unused until Task 6+ wires them up.
 #![allow(dead_code)]
 
-mod codec;
-mod commands;
+pub mod codec;
+pub mod commands;
 mod creds;
-mod error;
+pub mod error;
 pub mod keyring;
 pub mod state;
 
