@@ -84,6 +84,8 @@ Options:
 - `--lang <en|zh>`: choose diagnostic language. If no filename is supplied, this saves the preferred language to the user config.
 - `<filename>`: script file to execute. Any extension is accepted; `.dyyl` is conventional.
 
+Arguments after `<filename>` are passed verbatim to the script and can be read via `cli.*` commands (see [Script command-line arguments](#script-command-line-arguments)). The interpreter does not interpret these args itself.
+
 Examples:
 
 ```bash
@@ -93,12 +95,40 @@ dyyl --lang zh script.dyyl
 dyyl --host-json pack.dyyl
 ```
 
+## Script command-line arguments
+
+A dyyl script can read command-line arguments passed after the filename via the `cli.*` command family. The first line may be a shebang (`#!/usr/bin/env dyyl`) since `#` starts a comment.
+
+| Command | Args | Returns | Semantics |
+|---|---|---|---|
+| `cli.args` | none | list of strings | all args after filename, in order |
+| `cli.count` | none | number | arg count |
+| `cli.get <idx>` | one non-negative integer | string or `-1` | 0-based index access; OOB/negative returns `-1` |
+| `cli.has <flag>` | one string | `1` or `0` | exact flag match, or `--flag=...` form counts; no prefix matching |
+| `cli.value <flag>` | one string | string or `empty` | value for `--flag value` or `--flag=value`; first occurrence wins; `empty` if not found or no value |
+| `cli.script_name` | none | string | basename of the script file |
+
+Example `a.dyyl` (no indentation, per dyyl style):
+
+```dyyl
+#!/usr/bin/env dyyl
+logic.if cli.has("--help"), _
+io.out "Usage: a.dyyl [--help] [--out FILE]"
+logic.end
+logic.if cli.has("--out"), _
+io.out str.format("output: {0}", cli.value("--out"))
+logic.end
+```
+
+Run: `./a.dyyl --help` or `dyyl a.dyyl --out result.txt`.
+
 ## Language basics
 
 ### Syntax rules
 
 - Each command is one line. Line continuations are not supported.
 - `#` starts a comment.
+- The first line may be a shebang (`#!/usr/bin/env dyyl`); it is treated as a comment.
 - Arguments at the same level are separated by commas.
 - `_` and `empty` mean an intentionally empty argument position.
 - Nested command arguments can be delimited with parentheses.

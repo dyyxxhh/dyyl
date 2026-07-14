@@ -1,0 +1,13 @@
+# Demonstrates cli.* command family.
+# Usage: dyyl cli-args.dyyl [--help] [args...]
+io.out str.format("count: {0}", cli.count)
+io.out str.format("name: {0}", cli.script_name)
+logic.if cli.has("--help"), _
+io.out "help: this script shows cli.* usage"
+logic.end
+logic.if logic.same cli.count, 0, _
+io.out "no args"
+logic.end
+logic.if logic.not.same(cli.count, 0), _
+io.out str.format("first: {0}", cli.get(0))
+logic.end

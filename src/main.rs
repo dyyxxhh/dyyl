@@ -16,7 +16,9 @@ use std::process;
 use std::sync::Arc;
 
 use dyyl::i18n::Lang;
-use dyyl::runtime::execute::{run_script_with_lang, run_script_with_lang_and_host};
+use dyyl::runtime::execute::{
+    run_script_with_lang_and_args, run_script_with_lang_and_host_and_args,
+};
 use dyyl::runtime::host_provider::StdioHostConnection;
 
 fn main() {
@@ -34,8 +36,15 @@ fn main() {
     let mut lang_explicit = false;
     let mut filename: Option<String> = None;
 
+    let mut script_args: Vec<String> = Vec::new();
     let mut i = 1;
     while i < args.len() {
+        // 一旦看到 filename,后续所有 args 都转发给脚本
+        if filename.is_some() {
+            script_args.push(args[i].clone());
+            i += 1;
+            continue;
+        }
         match args[i].as_str() {
             "--debug" => debug = true,
             "--host-json" => host_json = true,
@@ -118,14 +127,23 @@ fn main() {
         }
     };
 
+    // 保留原始 filename 用于 cli.script_name(basename 提取在 handler 端)
+    let script_name = filename.clone();
     if host_json {
         let host = Arc::new(StdioHostConnection::new());
-        let output = run_script_with_lang_and_host(&source, debug, lang, Some(host));
+        let output = run_script_with_lang_and_host_and_args(
+            &source,
+            debug,
+            lang,
+            Some(host),
+            script_args,
+            script_name,
+        );
         if !output.error.is_empty() {
             eprintln!("dyyl: {}", output.error);
             process::exit(1);
         }
     } else {
-        run_script_with_lang(&source, debug, lang);
+        run_script_with_lang_and_args(&source, debug, lang, script_args, script_name);
     }
 }
