@@ -365,3 +365,18 @@ io.out dict.get(cache, key)            # (√2)
 | `time.format` | `格式` | 按自定义格式串输出时间（`YYYY`年 `MM`月 `DD`日 `HH`时 `mm`分 `ss`秒，如 `YYYY-MM-DD HH:mm:ss`） |
 | `time.diff` | `时间戳1, 时间戳2` | 计算两个时间戳的差值（秒） |
 | `time.add` | `时间戳, 秒数` | 时间戳加上指定秒数，返回新时间戳 |
+
+---
+
+## CLI 命令
+
+`cli.*` 命令族提供对脚本文件名之后命令行参数的只读访问。参数由解释器(`main.rs`)注入运行时环境;通过库 API 调用且未显式注入时,参数为空。
+
+| 命令 | 参数 | 返回 | 说明 |
+|------|------|------|------|
+| `cli.args` | — | `List<Str>` | 文件名之后的所有参数,按原顺序。无参时返回空列表 |
+| `cli.count` | — | `Num` | 参数个数。无参时返回 0 |
+| `cli.get` | 一个非负整数(0-based) | `Str` 或 `Num(-1)` | 按下标取参数。越界或负数返回 `Num(-1)` |
+| `cli.has` | 一个字符串(flag 名) | `Num(1)` 或 `Num(0)` | 精确匹配 flag,或 `--flag=...` 形式(`--flag` 部分相等即算存在)。不做前缀匹配 |
+| `cli.value` | 一个字符串(flag 名) | `Str` 或 `Empty` | 取 `--flag value`(空格分隔)或 `--flag=value`(等号)的值。找不到或 flag 后无值返回 `Empty`。多次出现返回第一个值 |
+| `cli.script_name` | — | `Str` | 脚本文件名的 basename(如 `/home/user/a.dyyl` → `a.dyyl`) |
