@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn invalid_toml_yields_error() {
         let err = toml::from_str::<DyylConfig>("{{{{bad").unwrap_err();
-        assert!(err.to_string().contains("invalid string"));
+        assert!(err.to_string().contains("invalid key"));
     }
 
     #[test]
