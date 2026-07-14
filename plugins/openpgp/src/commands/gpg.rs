@@ -16,17 +16,14 @@ use crate::state::PluginState;
 
 /// Find the gpg binary path. Returns `None` if not found on PATH.
 fn gpg_path() -> Option<String> {
-    which("gpg")
-        .ok()
-        .map(|p| p.to_string_lossy().to_string())
+    which("gpg").ok().map(|p| p.to_string_lossy().to_string())
 }
 
 /// Run gpg with `args`, optionally piping `stdin` to the child.
 /// Returns `(stdout, stderr, exit_code)`.
 fn run_gpg(args: &[&str], stdin: Option<&[u8]>) -> Result<(String, String, i32), PluginError> {
-    let gpg = gpg_path().ok_or_else(|| {
-        PluginError::gpg_not_installed("gpg binary not found in PATH")
-    })?;
+    let gpg =
+        gpg_path().ok_or_else(|| PluginError::gpg_not_installed("gpg binary not found in PATH"))?;
 
     let mut cmd = Command::new(&gpg);
     cmd.args(args);
@@ -123,13 +120,18 @@ pub fn detect(_state: &mut PluginState, _args: &[DyylValue]) -> Result<DyylValue
 pub fn exec(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let gpg_args: Vec<String> = if let Some(first) = args.first() {
         match first {
-            DyylValue::Str(s) => shell_split(s)
-                .map_err(|e| PluginError::runtime(format!("shell split: {e}")))?,
+            DyylValue::Str(s) => {
+                shell_split(s).map_err(|e| PluginError::runtime(format!("shell split: {e}")))?
+            }
             DyylValue::List(items) => items
                 .iter()
                 .filter_map(|i| i.as_str().map(String::from))
                 .collect(),
-            _ => return Err(PluginError::type_error("gpg.exec expects string or list arg")),
+            _ => {
+                return Err(PluginError::type_error(
+                    "gpg.exec expects string or list arg",
+                ))
+            }
         }
     } else {
         return Err(PluginError::arity_mismatch("gpg.exec expects (args)"));
@@ -146,10 +148,7 @@ pub fn exec(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, P
 }
 
 /// `gpg.encrypt` (arity 2): encrypt text using system gpg for a recipient.
-pub fn gpg_encrypt(
-    _state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn gpg_encrypt(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let text = args
         .first()
         .and_then(DyylValue::as_str)
@@ -172,31 +171,32 @@ pub fn gpg_encrypt_file(
     _state: &mut PluginState,
     args: &[DyylValue],
 ) -> Result<DyylValue, PluginError> {
-    let in_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.encrypt.file expects (in_path, out_path, recipient)"))?;
-    let out_path = args
-        .get(1)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.encrypt.file expects (in_path, out_path, recipient)"))?;
-    let recipient = args
-        .get(2)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.encrypt.file expects (in_path, out_path, recipient)"))?;
+    let in_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.encrypt.file expects (in_path, out_path, recipient)")
+    })?;
+    let out_path = args.get(1).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.encrypt.file expects (in_path, out_path, recipient)")
+    })?;
+    let recipient = args.get(2).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.encrypt.file expects (in_path, out_path, recipient)")
+    })?;
 
     run_gpg_or_fail(
-        &["--encrypt", "--recipient", recipient, "--output", out_path, in_path],
+        &[
+            "--encrypt",
+            "--recipient",
+            recipient,
+            "--output",
+            out_path,
+            in_path,
+        ],
         None,
     )?;
     Ok(DyylValue::Str("1".to_string()))
 }
 
 /// `gpg.decrypt` (arity 1): decrypt an armored message using system gpg.
-pub fn gpg_decrypt(
-    _state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn gpg_decrypt(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let armor = args
         .first()
         .and_then(DyylValue::as_str)
@@ -211,14 +211,12 @@ pub fn gpg_decrypt_file(
     _state: &mut PluginState,
     args: &[DyylValue],
 ) -> Result<DyylValue, PluginError> {
-    let in_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.decrypt.file expects (in_path, out_path)"))?;
-    let out_path = args
-        .get(1)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.decrypt.file expects (in_path, out_path)"))?;
+    let in_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.decrypt.file expects (in_path, out_path)")
+    })?;
+    let out_path = args.get(1).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.decrypt.file expects (in_path, out_path)")
+    })?;
     run_gpg_or_fail(&["--decrypt", "--output", out_path, in_path], None)?;
     Ok(DyylValue::Str("1".to_string()))
 }
@@ -251,26 +249,22 @@ pub fn gpg_sign_file(
     _state: &mut PluginState,
     args: &[DyylValue],
 ) -> Result<DyylValue, PluginError> {
-    let in_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.sign.file expects (in_path, out_path, key_id, detach?)"))?;
-    let out_path = args
-        .get(1)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.sign.file expects (in_path, out_path, key_id)"))?;
-    let key_id = args
-        .get(2)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.sign.file expects (in_path, out_path, key_id)"))?;
+    let in_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.sign.file expects (in_path, out_path, key_id, detach?)")
+    })?;
+    let out_path = args.get(1).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.sign.file expects (in_path, out_path, key_id)")
+    })?;
+    let key_id = args.get(2).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.sign.file expects (in_path, out_path, key_id)")
+    })?;
     let detach = args
         .get(3)
         .and_then(DyylValue::as_str)
         .map(|s| s == "1")
         .unwrap_or(false);
 
-    let mut gpg_args: Vec<&str> =
-        vec!["--armor", "--local-user", key_id, "--output", out_path];
+    let mut gpg_args: Vec<&str> = vec!["--armor", "--local-user", key_id, "--output", out_path];
     gpg_args.push(if detach { "--detach-sign" } else { "--sign" });
     gpg_args.push(in_path);
     run_gpg_or_fail(&gpg_args, None)?;
@@ -288,10 +282,7 @@ fn make_verify_result(valid: bool, signer: &str) -> DyylValue {
 /// `gpg.verify` (arity 2): verify a signature using system gpg (inline
 /// or detached). Returns `{valid, signer}` — never errors on a bad sig;
 /// the `valid` field carries that signal.
-pub fn gpg_verify(
-    _state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn gpg_verify(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let sig_or_text = args
         .first()
         .and_then(DyylValue::as_str)
@@ -312,8 +303,7 @@ pub fn gpg_verify(
 
         let sig_path = sig_temp.path().to_string_lossy().to_string();
         let data_path = data_temp.path().to_string_lossy().to_string();
-        let (_stdout, stderr, code) =
-            run_gpg(&["--verify", &sig_path, &data_path], None)?;
+        let (_stdout, stderr, code) = run_gpg(&["--verify", &sig_path, &data_path], None)?;
         let valid = code == 0;
         let signer = extract_signer_from_gpg_output(&stderr);
         Ok(make_verify_result(valid, &signer))
@@ -331,10 +321,9 @@ pub fn gpg_verify_file(
     _state: &mut PluginState,
     args: &[DyylValue],
 ) -> Result<DyylValue, PluginError> {
-    let sig_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("gpg.verify.file expects (sig_path, data_path?)"))?;
+    let sig_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("gpg.verify.file expects (sig_path, data_path?)")
+    })?;
     let data_path = args.get(1).and_then(DyylValue::as_str);
 
     let gpg_args: Vec<&str> = if let Some(dp) = data_path {
@@ -351,13 +340,9 @@ pub fn gpg_verify_file(
 
 /// `gpg.key.list` (arity 0): list keys in system gpg keyring. Returns a
 /// list of `{fp, uid}` dicts.
-pub fn key_list(
-    _state: &mut PluginState,
-    _args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn key_list(_state: &mut PluginState, _args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     // On any gpg failure, return an empty list rather than erroring.
-    let stdout =
-        run_gpg_or_fail(&["--list-keys", "--with-colons"], None).unwrap_or_default();
+    let stdout = run_gpg_or_fail(&["--list-keys", "--with-colons"], None).unwrap_or_default();
 
     let mut keys: Vec<DyylValue> = Vec::new();
     let mut current_fp = String::new();
@@ -402,10 +387,7 @@ pub fn key_list(
 
 /// `gpg.key.import` (arity 1): import armored key into system gpg
 /// keyring. Returns the import count as a string.
-pub fn key_import(
-    _state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn key_import(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let armor = args
         .first()
         .and_then(DyylValue::as_str)
@@ -433,10 +415,7 @@ pub fn key_import(
 
 /// `gpg.key.export` (arity 2): export key from system gpg keyring as
 /// armored text.
-pub fn key_export(
-    _state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn key_export(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let key_id = args
         .first()
         .and_then(DyylValue::as_str)

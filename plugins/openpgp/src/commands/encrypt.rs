@@ -18,8 +18,7 @@ const POLICY: &StandardPolicy = &StandardPolicy::new();
 /// 40-char hex fingerprint, look up the public key in the keyring;
 /// otherwise parse it as an inline armored public key.
 fn resolve_recipient(state: &PluginState, recipient: &str) -> Result<Cert, PluginError> {
-    let is_fp = recipient.len() == 40
-        && recipient.chars().all(|c| c.is_ascii_hexdigit());
+    let is_fp = recipient.len() == 40 && recipient.chars().all(|c| c.is_ascii_hexdigit());
     if is_fp {
         let keyring = Keyring::new(state.credentials_dir.clone());
         let armored = keyring
@@ -51,16 +50,14 @@ fn encrypt_to_armored(
     let message = Armorer::new(message)
         .build()
         .map_err(|e| PluginError::runtime(format!("build armorer: {e}")))?;
-    let recipients = certs
-        .iter()
-        .flat_map(|c| {
-            c.keys()
-                .with_policy(POLICY, None)
-                .supported()
-                .alive()
-                .revoked(false)
-                .for_storage_encryption()
-        });
+    let recipients = certs.iter().flat_map(|c| {
+        c.keys()
+            .with_policy(POLICY, None)
+            .supported()
+            .alive()
+            .revoked(false)
+            .for_storage_encryption()
+    });
     let message = Encryptor::for_recipients(message, recipients)
         .build()
         .map_err(|e| PluginError::runtime(format!("build encryptor: {e}")))?;
@@ -74,8 +71,7 @@ fn encrypt_to_armored(
         .finalize()
         .map_err(|e| PluginError::runtime(format!("finalize encryption: {e}")))?;
 
-    String::from_utf8(sink)
-        .map_err(|e| PluginError::runtime(format!("ciphertext not utf8: {e}")))
+    String::from_utf8(sink).map_err(|e| PluginError::runtime(format!("ciphertext not utf8: {e}")))
 }
 
 /// `encrypt` (arity ≥2): encrypt text for one or more recipients
@@ -86,11 +82,7 @@ pub fn encrypt(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue,
         .and_then(DyylValue::as_str)
         .ok_or_else(|| PluginError::arity_mismatch("encrypt expects (text, recipient, ...)"))?;
 
-    let recipient_strs: Vec<&str> = args
-        .iter()
-        .skip(1)
-        .filter_map(DyylValue::as_str)
-        .collect();
+    let recipient_strs: Vec<&str> = args.iter().skip(1).filter_map(DyylValue::as_str).collect();
     if recipient_strs.is_empty() {
         return Err(PluginError::arity_mismatch(
             "encrypt requires at least one recipient",
@@ -103,23 +95,14 @@ pub fn encrypt(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue,
 
 /// `encrypt.file` (arity ≥3): encrypt a file to an output file for one
 /// or more recipients. Returns `"1"` on success.
-pub fn encrypt_file(
-    state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
-    let in_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("encrypt.file expects (in_path, out_path, recipient, ...)"))?;
-    let out_path = args
-        .get(1)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("encrypt.file expects (in_path, out_path, recipient, ...)"))?;
-    let recipient_strs: Vec<&str> = args
-        .iter()
-        .skip(2)
-        .filter_map(DyylValue::as_str)
-        .collect();
+pub fn encrypt_file(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
+    let in_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("encrypt.file expects (in_path, out_path, recipient, ...)")
+    })?;
+    let out_path = args.get(1).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("encrypt.file expects (in_path, out_path, recipient, ...)")
+    })?;
+    let recipient_strs: Vec<&str> = args.iter().skip(2).filter_map(DyylValue::as_str).collect();
     if recipient_strs.is_empty() {
         return Err(PluginError::arity_mismatch(
             "encrypt.file requires at least one recipient",
@@ -138,10 +121,7 @@ pub fn encrypt_file(
 
 /// `sym.encrypt` (arity ≥2): symmetrically encrypt text with a
 /// passphrase, returning armored ciphertext.
-pub fn sym_encrypt(
-    _state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn sym_encrypt(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let text = args
         .first()
         .and_then(DyylValue::as_str)

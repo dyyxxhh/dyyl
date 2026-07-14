@@ -76,10 +76,9 @@ fn resolve_passphrase(state: &PluginState, arg: Option<&str>) -> Result<String, 
 /// produces an armored detached signature; otherwise an inline signed
 /// message containing the data.
 pub fn sign(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
-    let text = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("sign expects (text, key_fp, detach?, passphrase?)"))?;
+    let text = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("sign expects (text, key_fp, detach?, passphrase?)")
+    })?;
     let fp = args
         .get(1)
         .and_then(DyylValue::as_str)
@@ -142,18 +141,17 @@ pub fn sign(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, Pl
 /// `sign.file` (arity ≥3): sign a file to an output file (inline or
 /// detached). Returns `"1"` on success.
 pub fn sign_file(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
-    let in_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("sign.file expects (in_path, out_path, key_fp, detach?, passphrase?)"))?;
-    let out_path = args
-        .get(1)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("sign.file expects (in_path, out_path, key_fp, ...)"))?;
-    let fp = args
-        .get(2)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("sign.file expects (in_path, out_path, key_fp)"))?;
+    let in_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch(
+            "sign.file expects (in_path, out_path, key_fp, detach?, passphrase?)",
+        )
+    })?;
+    let out_path = args.get(1).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("sign.file expects (in_path, out_path, key_fp, ...)")
+    })?;
+    let fp = args.get(2).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("sign.file expects (in_path, out_path, key_fp)")
+    })?;
 
     let text = std::fs::read_to_string(in_path)
         .map_err(|e| PluginError::runtime(format!("read input file: {e}")))?;

@@ -10,8 +10,8 @@ use sequoia_openpgp::parse::stream::{
 use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::policy::StandardPolicy;
 use sequoia_openpgp::types::SymmetricAlgorithm;
-use sequoia_openpgp::{Cert, KeyHandle};
 use sequoia_openpgp::{packet::PKESK, packet::SKESK};
+use sequoia_openpgp::{Cert, KeyHandle};
 
 use crate::codec::DyylValue;
 use crate::error::PluginError;
@@ -187,18 +187,13 @@ pub fn decrypt(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue,
 
 /// `decrypt.file` (arity 2+): decrypt an armored file to an output
 /// file. Returns `"1"` on success.
-pub fn decrypt_file(
-    state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
-    let in_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("decrypt.file expects (in_path, out_path, passphrase?)"))?;
-    let out_path = args
-        .get(1)
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("decrypt.file expects (in_path, out_path, passphrase?)"))?;
+pub fn decrypt_file(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
+    let in_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("decrypt.file expects (in_path, out_path, passphrase?)")
+    })?;
+    let out_path = args.get(1).and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("decrypt.file expects (in_path, out_path, passphrase?)")
+    })?;
 
     let armor = std::fs::read_to_string(in_path)
         .map_err(|e| PluginError::runtime(format!("read input file: {e}")))?;
@@ -222,10 +217,7 @@ pub fn decrypt_file(
 
 /// `sym.decrypt` (arity 2+): symmetrically decrypt an armored message
 /// with a passphrase.
-pub fn sym_decrypt(
-    _state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
+pub fn sym_decrypt(_state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
     let armor = args
         .first()
         .and_then(DyylValue::as_str)

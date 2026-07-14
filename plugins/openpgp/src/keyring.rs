@@ -33,19 +33,17 @@ impl Keyring {
         if !self.index_path().exists() {
             return Ok(KeyringIndex::default());
         }
-        let content = fs::read_to_string(self.index_path())
-            .map_err(|e| format!("read index.json: {e}"))?;
+        let content =
+            fs::read_to_string(self.index_path()).map_err(|e| format!("read index.json: {e}"))?;
         serde_json::from_str(&content).map_err(|e| format!("parse index.json: {e}"))
     }
 
     /// Save the keyring index to disk (pretty-printed JSON).
     pub fn save_index(&self, index: &KeyringIndex) -> Result<(), String> {
-        fs::create_dir_all(&self.base_dir)
-            .map_err(|e| format!("create base_dir: {e}"))?;
+        fs::create_dir_all(&self.base_dir).map_err(|e| format!("create base_dir: {e}"))?;
         let json = serde_json::to_string_pretty(index)
             .map_err(|e| format!("serialize index.json: {e}"))?;
-        fs::write(self.index_path(), json)
-            .map_err(|e| format!("write index.json: {e}"))
+        fs::write(self.index_path(), json).map_err(|e| format!("write index.json: {e}"))
     }
 
     /// Insert or update an entry, merging by fingerprint. If an entry
@@ -83,11 +81,9 @@ impl Keyring {
     /// Write a key file under `keys/<fp>.{pub,sec}.asc`. Secret key
     /// files are chmod'd to 0600 on Unix.
     pub fn write_key_file(&self, fp: &str, secret: bool, content: &str) -> Result<(), String> {
-        fs::create_dir_all(self.keys_dir())
-            .map_err(|e| format!("create keys dir: {e}"))?;
+        fs::create_dir_all(self.keys_dir()).map_err(|e| format!("create keys dir: {e}"))?;
         let path = self.key_path(fp, secret);
-        fs::write(&path, content)
-            .map_err(|e| format!("write key file {}: {e}", path.display()))?;
+        fs::write(&path, content).map_err(|e| format!("write key file {}: {e}", path.display()))?;
         if secret {
             #[cfg(unix)]
             {
@@ -105,8 +101,7 @@ impl Keyring {
         if !path.exists() {
             return Err(format!("key file not found: {}", path.display()));
         }
-        fs::read_to_string(&path)
-            .map_err(|e| format!("read key file {}: {e}", path.display()))
+        fs::read_to_string(&path).map_err(|e| format!("read key file {}: {e}", path.display()))
     }
 
     /// Find an entry by fingerprint. Returns `None` if not found.

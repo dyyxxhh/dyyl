@@ -4,8 +4,7 @@ use std::io::Read;
 use std::str::FromStr;
 
 use sequoia_openpgp::parse::stream::{
-    DetachedVerifierBuilder, MessageLayer, MessageStructure, VerificationHelper,
-    VerifierBuilder,
+    DetachedVerifierBuilder, MessageLayer, MessageStructure, VerificationHelper, VerifierBuilder,
 };
 use sequoia_openpgp::parse::Parse;
 use sequoia_openpgp::policy::StandardPolicy;
@@ -186,19 +185,19 @@ pub fn verify(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, 
         verify_inline(text_or_sig, helper)
     };
 
-    Ok(make_result(helper.valid, &helper.signer_uid, &helper.signer_fp))
+    Ok(make_result(
+        helper.valid,
+        &helper.signer_uid,
+        &helper.signer_fp,
+    ))
 }
 
 /// `verify.file` (arity 1–2): verify a signed file (inline or
 /// detached). Same semantics as `verify` but reads from files.
-pub fn verify_file(
-    state: &mut PluginState,
-    args: &[DyylValue],
-) -> Result<DyylValue, PluginError> {
-    let sig_or_data_path = args
-        .first()
-        .and_then(DyylValue::as_str)
-        .ok_or_else(|| PluginError::arity_mismatch("verify.file expects (sig_or_data_path, data_path?)"))?;
+pub fn verify_file(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, PluginError> {
+    let sig_or_data_path = args.first().and_then(DyylValue::as_str).ok_or_else(|| {
+        PluginError::arity_mismatch("verify.file expects (sig_or_data_path, data_path?)")
+    })?;
     let data_path = args.get(1).and_then(DyylValue::as_str);
 
     let content = std::fs::read_to_string(sig_or_data_path)

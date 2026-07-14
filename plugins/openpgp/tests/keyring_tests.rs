@@ -38,8 +38,7 @@ fn load_index_roundtrip() -> Result<(), String> {
     let index = KeyringIndex {
         keys: vec![make_entry("ABCD1234EF567890", "alice@example.com", false)],
     };
-    let json =
-        serde_json::to_string_pretty(&index).map_err(|e| format!("serialize: {e}"))?;
+    let json = serde_json::to_string_pretty(&index).map_err(|e| format!("serialize: {e}"))?;
     fs::write(kr.base_dir.join("index.json"), json)
         .map_err(|e| format!("write index.json: {e}"))?;
 
@@ -218,6 +217,9 @@ fn find_entry() -> Result<(), String> {
     assert_eq!(entry.uid, "alice@example.com");
 
     let not_found = kr.find_entry("NONEXISTENT")?;
-    assert!(not_found.is_none(), "find_entry on missing fp should be None");
+    assert!(
+        not_found.is_none(),
+        "find_entry on missing fp should be None"
+    );
     Ok(())
 }

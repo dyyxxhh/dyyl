@@ -51,7 +51,10 @@ fn dict_get<'a>(dict: &'a DyylValue, key: &str) -> Option<&'a DyylValue> {
 /// Path of a key file inside a keyring base dir.
 fn key_file_path(state: &PluginState, fp: &str, secret: bool) -> PathBuf {
     let suffix = if secret { "sec.asc" } else { "pub.asc" };
-    state.credentials_dir.join("keys").join(format!("{fp}.{suffix}"))
+    state
+        .credentials_dir
+        .join("keys")
+        .join(format!("{fp}.{suffix}"))
 }
 
 #[test]
@@ -65,12 +68,19 @@ fn key_generate_returns_fingerprint_and_writes_files() {
     let fp = extract_fp(&result.expect("generate should succeed"));
     assert_eq!(fp.len(), 40, "fingerprint should be 40 hex chars");
     assert!(
-        fp.chars().all(|c| c.is_ascii_digit() || ('A'..='F').contains(&c)),
+        fp.chars()
+            .all(|c| c.is_ascii_digit() || ('A'..='F').contains(&c)),
         "fp should be uppercase hex, got {fp}"
     );
 
-    assert!(key_file_path(&state, &fp, false).exists(), "pub key file should exist");
-    assert!(key_file_path(&state, &fp, true).exists(), "sec key file should exist");
+    assert!(
+        key_file_path(&state, &fp, false).exists(),
+        "pub key file should exist"
+    );
+    assert!(
+        key_file_path(&state, &fp, true).exists(),
+        "sec key file should exist"
+    );
 
     let keyring = Keyring::new(state.credentials_dir.clone());
     assert!(
@@ -96,8 +106,14 @@ fn key_generate_with_underscore_uses_default_passphrase() {
     );
     let fp = extract_fp(&result.expect("generate should succeed"));
     assert_eq!(fp.len(), 40);
-    assert!(key_file_path(&state, &fp, false).exists(), "pub key file should exist");
-    assert!(key_file_path(&state, &fp, true).exists(), "sec key file should exist");
+    assert!(
+        key_file_path(&state, &fp, false).exists(),
+        "pub key file should exist"
+    );
+    assert!(
+        key_file_path(&state, &fp, true).exists(),
+        "sec key file should exist"
+    );
 }
 
 #[test]

@@ -204,10 +204,7 @@ pub fn delete(state: &mut PluginState, args: &[DyylValue]) -> Result<DyylValue, 
 
 /// Serialize a `Cert` to an armored string. When `secret` is true, the
 /// transferable secret key (TSK) form is emitted.
-fn serialize_cert_to_armor(
-    cert: &sequoia_openpgp::Cert,
-    secret: bool,
-) -> anyhow::Result<String> {
+fn serialize_cert_to_armor(cert: &sequoia_openpgp::Cert, secret: bool) -> anyhow::Result<String> {
     use sequoia_openpgp::serialize::SerializeInto;
 
     let bytes = if secret {

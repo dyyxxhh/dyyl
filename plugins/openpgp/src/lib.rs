@@ -73,10 +73,7 @@ pub extern "C" fn dyyl_plugin_on_load(_handle: *mut c_void) -> c_int {
 // ── 8. list_commands ──────────────────────────────────────────────
 
 #[no_mangle]
-pub extern "C" fn dyyl_plugin_list_commands(
-    _handle: *mut c_void,
-    out: *mut *mut c_char,
-) -> c_int {
+pub extern "C" fn dyyl_plugin_list_commands(_handle: *mut c_void, out: *mut *mut c_char) -> c_int {
     write_string(include_str!("../command_list.json"), out)
 }
 
@@ -211,9 +208,7 @@ pub extern "C" fn dyyl_plugin_set_credentials(
     // `Box::into_raw` and is still valid.
     let state: &mut PluginState = unsafe { &mut *(handle as *mut PluginState) };
     // SAFETY: `creds_json` is a valid NUL-terminated C string per the ABI contract.
-    let json_str = unsafe { CStr::from_ptr(creds_json) }
-        .to_str()
-        .unwrap_or("");
+    let json_str = unsafe { CStr::from_ptr(creds_json) }.to_str().unwrap_or("");
     match creds::apply_credentials(state, json_str) {
         Ok(()) => 0,
         Err(_) => 1,

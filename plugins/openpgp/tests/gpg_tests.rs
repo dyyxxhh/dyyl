@@ -229,7 +229,10 @@ fn gpg_encrypt_decrypt_file_roundtrip() {
     )
     .unwrap();
     assert_eq!(as_str(&result), "1");
-    assert_eq!(std::fs::read_to_string(&dec_path).unwrap(), "file body content");
+    assert_eq!(
+        std::fs::read_to_string(&dec_path).unwrap(),
+        "file body content"
+    );
 }
 
 #[test]
@@ -245,7 +248,11 @@ fn gpg_sign_verify_detached_roundtrip() {
     let result = commands::dispatch(
         &mut state,
         "gpg.sign",
-        &[str_arg("hello"), str_arg("signer@example.com"), str_arg("1")],
+        &[
+            str_arg("hello"),
+            str_arg("signer@example.com"),
+            str_arg("1"),
+        ],
     )
     .unwrap();
     let sig = match result {
@@ -255,12 +262,8 @@ fn gpg_sign_verify_detached_roundtrip() {
     assert!(sig.contains("BEGIN PGP SIGNATURE"));
 
     // Verify (detached)
-    let result = commands::dispatch(
-        &mut state,
-        "gpg.verify",
-        &[str_arg(&sig), str_arg("hello")],
-    )
-    .unwrap();
+    let result =
+        commands::dispatch(&mut state, "gpg.verify", &[str_arg(&sig), str_arg("hello")]).unwrap();
     if let DyylValue::Dict(pairs) = result {
         assert_eq!(dict_get(&pairs, "valid"), "1");
         assert!(dict_get(&pairs, "signer").contains("signer@example.com"));
@@ -348,12 +351,7 @@ fn gpg_key_import_export_list_roundtrip() {
     }
     std::env::set_var("GNUPGHOME", &gnupghome2);
 
-    let result = commands::dispatch(
-        &mut state,
-        "gpg.key.import",
-        &[str_arg(&exported)],
-    )
-    .unwrap();
+    let result = commands::dispatch(&mut state, "gpg.key.import", &[str_arg(&exported)]).unwrap();
     let count = as_str(&result);
     // count should be a non-empty numeric string
     assert!(!count.is_empty());

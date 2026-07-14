@@ -52,12 +52,8 @@ fn str_arg(s: &str) -> DyylValue {
 fn encrypt_decrypt_roundtrip_with_fp() {
     let (mut state, _dir, fp) = make_state_with_key();
 
-    let ciphertext = commands::dispatch(
-        &mut state,
-        "encrypt",
-        &[str_arg("hello"), str_arg(&fp)],
-    )
-    .expect("encrypt should succeed");
+    let ciphertext = commands::dispatch(&mut state, "encrypt", &[str_arg("hello"), str_arg(&fp)])
+        .expect("encrypt should succeed");
     let armored = ciphertext.as_str().expect("armored string");
     assert!(
         armored.starts_with("-----BEGIN PGP MESSAGE"),
@@ -78,12 +74,8 @@ fn encrypt_with_inline_armored_pubkey() {
     let (mut state, _dir, fp) = make_state_with_key();
 
     // Export the public key.
-    let exported = commands::dispatch(
-        &mut state,
-        "key.export",
-        &[str_arg(&fp), str_arg("0")],
-    )
-    .expect("export should succeed");
+    let exported = commands::dispatch(&mut state, "key.export", &[str_arg(&fp), str_arg("0")])
+        .expect("export should succeed");
     let armored_pubkey = exported.as_str().expect("armored pubkey").to_string();
 
     // Encrypt using the inline armored public key (not the fingerprint).
@@ -116,7 +108,10 @@ fn encrypt_nonexistent_fp_returns_error() {
     let result = commands::dispatch(
         &mut state,
         "encrypt",
-        &[str_arg("hello"), str_arg("DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF")],
+        &[
+            str_arg("hello"),
+            str_arg("DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"),
+        ],
     );
     let err = result.expect_err("encrypt with nonexistent fp should error");
     assert_eq!(
@@ -156,12 +151,8 @@ fn sym_encrypt_decrypt_roundtrip() {
 fn decrypt_wrong_passphrase_returns_error() {
     let (mut state, _dir, fp) = make_state_with_key();
 
-    let ciphertext = commands::dispatch(
-        &mut state,
-        "encrypt",
-        &[str_arg("hello"), str_arg(&fp)],
-    )
-    .expect("encrypt should succeed");
+    let ciphertext = commands::dispatch(&mut state, "encrypt", &[str_arg("hello"), str_arg(&fp)])
+        .expect("encrypt should succeed");
     let armored = ciphertext.as_str().expect("armored string").to_string();
 
     let result = commands::dispatch(
@@ -189,10 +180,18 @@ fn encrypt_file_roundtrip() {
     let enc_result = commands::dispatch(
         &mut state,
         "encrypt.file",
-        &[str_arg(in_path.to_str().unwrap()), str_arg(enc_path.to_str().unwrap()), str_arg(&fp)],
+        &[
+            str_arg(in_path.to_str().unwrap()),
+            str_arg(enc_path.to_str().unwrap()),
+            str_arg(&fp),
+        ],
     )
     .expect("encrypt.file should succeed");
-    assert_eq!(enc_result.as_str(), Some("1"), "encrypt.file should return \"1\"");
+    assert_eq!(
+        enc_result.as_str(),
+        Some("1"),
+        "encrypt.file should return \"1\""
+    );
 
     let enc_content = fs::read_to_string(&enc_path).expect("read encrypted file");
     assert!(
@@ -210,8 +209,15 @@ fn encrypt_file_roundtrip() {
         ],
     )
     .expect("decrypt.file should succeed");
-    assert_eq!(dec_result.as_str(), Some("1"), "decrypt.file should return \"1\"");
+    assert_eq!(
+        dec_result.as_str(),
+        Some("1"),
+        "decrypt.file should return \"1\""
+    );
 
     let dec_content = fs::read_to_string(&dec_path).expect("read decrypted file");
-    assert_eq!(dec_content, "hello", "decrypted file should contain original text");
+    assert_eq!(
+        dec_content, "hello",
+        "decrypted file should contain original text"
+    );
 }

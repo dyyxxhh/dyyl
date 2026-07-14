@@ -61,24 +61,16 @@ fn dict_get<'a>(v: &'a DyylValue, key: &str) -> Option<&'a str> {
 fn sign_verify_inline_roundtrip() {
     let (mut state, _dir, fp) = make_state_with_key();
 
-    let signed = commands::dispatch(
-        &mut state,
-        "sign",
-        &[str_arg("hello"), str_arg(&fp)],
-    )
-    .expect("sign should succeed");
+    let signed = commands::dispatch(&mut state, "sign", &[str_arg("hello"), str_arg(&fp)])
+        .expect("sign should succeed");
     let armored = signed.as_str().expect("armored signature string");
     assert!(
         armored.contains("BEGIN PGP MESSAGE"),
         "inline signed message should contain PGP MESSAGE header, got: {armored}"
     );
 
-    let result = commands::dispatch(
-        &mut state,
-        "verify",
-        &[str_arg(armored)],
-    )
-    .expect("verify should return Ok(dict)");
+    let result = commands::dispatch(&mut state, "verify", &[str_arg(armored)])
+        .expect("verify should return Ok(dict)");
     assert!(
         matches!(result, DyylValue::Dict(_)),
         "verify should return a Dict, got: {result:?}"
@@ -116,12 +108,8 @@ fn sign_detached_verify_roundtrip() {
         "detached signature should contain PGP SIGNATURE or PGP MESSAGE header, got: {armored}"
     );
 
-    let result = commands::dispatch(
-        &mut state,
-        "verify",
-        &[str_arg(armored), str_arg("hello")],
-    )
-    .expect("verify should return Ok(dict)");
+    let result = commands::dispatch(&mut state, "verify", &[str_arg(armored), str_arg("hello")])
+        .expect("verify should return Ok(dict)");
     assert!(
         matches!(result, DyylValue::Dict(_)),
         "verify should return a Dict, got: {result:?}"
@@ -145,7 +133,12 @@ fn sign_wrong_passphrase_returns_error() {
     let result = commands::dispatch(
         &mut state,
         "sign",
-        &[str_arg("hello"), str_arg(&fp), str_arg("_"), str_arg("wrong-pass")],
+        &[
+            str_arg("hello"),
+            str_arg(&fp),
+            str_arg("_"),
+            str_arg("wrong-pass"),
+        ],
     );
     let err = result.expect_err("sign with wrong passphrase should error");
     let code = err.code();
@@ -166,7 +159,10 @@ fn verify_tampered_returns_invalid() {
         &[str_arg("hello"), str_arg(&fp), str_arg("1")],
     )
     .expect("sign detached should succeed");
-    let armored = signed.as_str().expect("armored detached signature").to_string();
+    let armored = signed
+        .as_str()
+        .expect("armored detached signature")
+        .to_string();
 
     let result = commands::dispatch(
         &mut state,
