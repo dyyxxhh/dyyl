@@ -1,0 +1,15 @@
+# Golden fixture: openpgp plugin keyring persistence
+# Covers: key.generate -> key.list (verify key persists in keyring)
+# Requires: openpgp plugin installed at <xdg>/dyyl/plugins/openpgp/0.1.0/
+
+# Generate a keypair
+set $fp, openpgp.key.generate "persist <test@example.com>", "test-pass"
+io.out $fp
+
+# List all keys in the keyring (returns a list of dicts)
+set $keys, openpgp.key.list()
+
+# Extract the first key's fingerprint from the list
+set $first, list.get($keys, 0)
+set $found_fp, dict.get($first, fp)
+io.out $found_fp

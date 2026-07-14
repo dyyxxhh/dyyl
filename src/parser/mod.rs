@@ -260,22 +260,34 @@ fn parse_non_greedy_token(
                 return call.map(Expr::Call);
             }
 
+            // Parenthesized calls — including plugin commands like
+            // `dict.get($r, key)` — are parsed as nested calls.
             if helpers::is_paren_call(s) {
-                parse_paren_call_str(s, line, text).map(Expr::Call)
-            } else {
-                Err(ParseError {
-                    line,
-                    text: text.to_string(),
-                    message: format!(
-                        "line {}: ambiguous left-nested call in '{command}' — \
-                     param starts with '{cmd_name}' but has no parentheses; \
-                     use _ or () to disambiguate",
-                        line,
-                        command = parent_command,
-                        cmd_name = helpers::first_word(s),
-                    ),
-                })
+                return parse_paren_call_str(s, line, text).map(Expr::Call);
             }
+
+            // Bare plugin command name (dotted, no parens): ambiguous in a
+            // non-greedy position — could be a zero-arity plugin call OR a
+            // literal like a filename (relative.txt, data.csv). To avoid
+            // misclassifying filenames, treat bare dotted names as literal
+            // strings here. Zero-arity plugin calls in non-greedy positions
+            // should use explicit parentheses: `plugin.cmd()`.
+            if helpers::is_plugin_command_name(first) {
+                return Ok(helpers::classify_literal_str(s));
+            }
+
+            Err(ParseError {
+                line,
+                text: text.to_string(),
+                message: format!(
+                    "line {}: ambiguous left-nested call in '{command}' — \
+                 param starts with '{cmd_name}' but has no parentheses; \
+                 use _ or () to disambiguate",
+                    line,
+                    command = parent_command,
+                    cmd_name = helpers::first_word(s),
+                ),
+            })
         }
         _ => Ok(helpers::token_to_expr_literal(token)),
     }
@@ -295,6 +307,19 @@ fn parse_greedy_rhs(
     }
 
     if helpers::is_command_start(trimmed) {
+        // A bare plugin command name with no parentheses and no trailing
+        // args is ambiguous in the greedy RHS — it could be a zero-arity
+        // plugin call OR a literal like a filename (relative.txt, data.csv).
+        // Treat it as a literal to avoid misclassifying filenames; zero-arity
+        // plugin calls should use explicit parentheses: `plugin.cmd()`.
+        let first = helpers::first_word(trimmed);
+        if helpers::is_plugin_command_name(first)
+            && !trimmed.contains('(')
+            && first == trimmed
+        {
+            return Ok(helpers::classify_literal_str(trimmed));
+        }
+
         let inner_tokens = lexer::lex_line(trimmed, line).map_err(|e| ParseError {
             line,
             text: text.to_string(),
