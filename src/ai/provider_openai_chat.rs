@@ -2,7 +2,7 @@
 //!
 //! 端点：{base_url}/chat/completions（base_url 空 = https://api.openai.com/v1）。
 
-use super::client::{HttpRequest, request_with_retry};
+use super::client::{request_with_retry, HttpRequest};
 use super::{AiError, AiErrorKind, AiProvider};
 use serde_json::Value;
 
@@ -17,7 +17,11 @@ pub struct OpenaiChatProvider {
 impl OpenaiChatProvider {
     #[must_use]
     pub fn new(api_key: String, model: String, base_url: String) -> Self {
-        Self { api_key, model, base_url }
+        Self {
+            api_key,
+            model,
+            base_url,
+        }
     }
 
     /// 构造 HTTP 请求（不发送）— 供测试验证请求体。
@@ -39,7 +43,10 @@ impl OpenaiChatProvider {
             url: format!("{base}/chat/completions"),
             method: "POST".to_string(),
             headers: vec![
-                ("Authorization".to_string(), format!("Bearer {}", self.api_key)),
+                (
+                    "Authorization".to_string(),
+                    format!("Bearer {}", self.api_key),
+                ),
                 ("Content-Type".to_string(), "application/json".to_string()),
             ],
             body: body.to_string(),
@@ -48,9 +55,8 @@ impl OpenaiChatProvider {
 
     /// 解析响应体，提取 choices[0].message.content。
     pub fn parse_response(&self, body: &str) -> Result<String, AiError> {
-        let v: Value = serde_json::from_str(body).map_err(|e| {
-            AiError::new(AiErrorKind::Parse, format!("invalid JSON: {e}"), None)
-        })?;
+        let v: Value = serde_json::from_str(body)
+            .map_err(|e| AiError::new(AiErrorKind::Parse, format!("invalid JSON: {e}"), None))?;
         let content = v
             .get("choices")
             .and_then(|c| c.get(0))

@@ -63,9 +63,10 @@ impl PluginLoader {
 
             // 3. set_credentials（仅当传入了 credentials_json 时）。
             if let Some(json) = credentials_json {
-                let set_creds: symbols::SetCredentials = *library
-                    .get(b"dyyl_plugin_set_credentials\0")
-                    .map_err(|_| AbiError::SymbolMissing("dyyl_plugin_set_credentials".to_string()))?;
+                let set_creds: symbols::SetCredentials =
+                    *library.get(b"dyyl_plugin_set_credentials\0").map_err(|_| {
+                        AbiError::SymbolMissing("dyyl_plugin_set_credentials".to_string())
+                    })?;
                 let json_c = CString::new(json).map_err(|_| AbiError::InvalidUtf8)?;
                 let rc = set_creds(handle, json_c.as_ptr());
                 if rc != 0 {

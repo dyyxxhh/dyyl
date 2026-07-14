@@ -2,7 +2,7 @@
 //!
 //! 端点：{base_url}/responses（base_url 空 = https://api.openai.com/v1）。
 
-use super::client::{HttpRequest, request_with_retry};
+use super::client::{request_with_retry, HttpRequest};
 use super::{AiError, AiErrorKind, AiProvider};
 use serde_json::Value;
 
@@ -17,7 +17,11 @@ pub struct OpenaiResponseProvider {
 impl OpenaiResponseProvider {
     #[must_use]
     pub fn new(api_key: String, model: String, base_url: String) -> Self {
-        Self { api_key, model, base_url }
+        Self {
+            api_key,
+            model,
+            base_url,
+        }
     }
 
     #[must_use]
@@ -36,7 +40,10 @@ impl OpenaiResponseProvider {
             url: format!("{base}/responses"),
             method: "POST".to_string(),
             headers: vec![
-                ("Authorization".to_string(), format!("Bearer {}", self.api_key)),
+                (
+                    "Authorization".to_string(),
+                    format!("Bearer {}", self.api_key),
+                ),
                 ("Content-Type".to_string(), "application/json".to_string()),
             ],
             body: body.to_string(),
@@ -45,9 +52,8 @@ impl OpenaiResponseProvider {
 
     /// 解析响应：output[*].content[*].text（找第一个有 text 的）。
     pub fn parse_response(&self, body: &str) -> Result<String, AiError> {
-        let v: Value = serde_json::from_str(body).map_err(|e| {
-            AiError::new(AiErrorKind::Parse, format!("invalid JSON: {e}"), None)
-        })?;
+        let v: Value = serde_json::from_str(body)
+            .map_err(|e| AiError::new(AiErrorKind::Parse, format!("invalid JSON: {e}"), None))?;
         let output = v.get("output").and_then(|o| o.as_array());
         if let Some(arr) = output {
             for item in arr {

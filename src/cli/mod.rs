@@ -47,10 +47,7 @@ pub fn try_handle_subcommand(args: &[String], lang: &mut Lang) -> CliResult {
                     eprintln!("Usage: dyyl build <filename>");
                     return CliResult::Handled(1);
                 };
-                let code = match crate::prepass::build_only(
-                    std::path::Path::new(file),
-                    *lang,
-                ) {
+                let code = match crate::prepass::build_only(std::path::Path::new(file), *lang) {
                     Ok(()) => 0,
                     Err(e) => {
                         eprintln!("prepass failed: {e}");

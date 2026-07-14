@@ -51,10 +51,12 @@ fn resolve_field(
     toml_fields: &HashMap<String, String>,
 ) -> Result<String, String> {
     match field.r#type.as_str() {
-        "string" => toml_fields
-            .get(&field.name)
-            .cloned()
-            .ok_or_else(|| format!("missing string credential '{}' for plugin '{}'", field.name, plugin_name)),
+        "string" => toml_fields.get(&field.name).cloned().ok_or_else(|| {
+            format!(
+                "missing string credential '{}' for plugin '{}'",
+                field.name, plugin_name
+            )
+        }),
         "file" => {
             let path = creds_dir.join(&field.name);
             if path.exists() {
@@ -79,7 +81,8 @@ fn resolve_field(
 
 fn ensure_credentials_dir(dir: &Path) -> Result<(), String> {
     if !dir.exists() {
-        fs::create_dir_all(dir).map_err(|e| format!("create credentials dir {}: {e}", dir.display()))?;
+        fs::create_dir_all(dir)
+            .map_err(|e| format!("create credentials dir {}: {e}", dir.display()))?;
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;

@@ -177,5 +177,8 @@ fn golden_cli_args() {
     assert_eq!(code, 0, "exit code must be 0, stderr was: {stderr}");
     // 脚本应打印 count=2 和 name=cli-args.dyyl
     assert!(stdout.contains("count: 2"), "stdout was: {stdout}");
-    assert!(stdout.contains("name: cli-args.dyyl"), "stdout was: {stdout}");
+    assert!(
+        stdout.contains("name: cli-args.dyyl"),
+        "stdout was: {stdout}"
+    );
 }

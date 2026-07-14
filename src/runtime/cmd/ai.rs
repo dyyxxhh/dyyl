@@ -54,7 +54,11 @@ fn handle_ai_ask(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value,
     let (system, user_val) = if call.args.len() == 1 {
         // 单参数：用默认 system，user 为唯一参数。
         let user_expr = call.args.first().ok_or_else(|| {
-            RuntimeError::new(ctx.line, &call.command, i18n::requires_args(ctx.lang.get(), 1))
+            RuntimeError::new(
+                ctx.line,
+                &call.command,
+                i18n::requires_args(ctx.lang.get(), 1),
+            )
         })?;
         (
             DEFAULT_ASK_SYSTEM_PROMPT.to_string(),
@@ -63,11 +67,19 @@ fn handle_ai_ask(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value,
     } else {
         // 双参数（及更多）：第一个为 system（`_` 用默认），第二个为 user。
         let first_expr = call.args.first().ok_or_else(|| {
-            RuntimeError::new(ctx.line, &call.command, i18n::requires_args(ctx.lang.get(), 2))
+            RuntimeError::new(
+                ctx.line,
+                &call.command,
+                i18n::requires_args(ctx.lang.get(), 2),
+            )
         })?;
         let first = eval_expr(first_expr, env, ctx)?;
         let user_expr = call.args.get(1).ok_or_else(|| {
-            RuntimeError::new(ctx.line, &call.command, i18n::requires_args(ctx.lang.get(), 2))
+            RuntimeError::new(
+                ctx.line,
+                &call.command,
+                i18n::requires_args(ctx.lang.get(), 2),
+            )
         })?;
         let user_val = eval_expr(user_expr, env, ctx)?;
         let sys_str = match first {
@@ -104,7 +116,11 @@ fn handle_ai_ask(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value,
             eprintln!(
                 "line {}: {}",
                 ctx.line,
-                i18n::t(ctx.lang.get(), "ai.ask_failed", &[("reason", "no config dir")])
+                i18n::t(
+                    ctx.lang.get(),
+                    "ai.ask_failed",
+                    &[("reason", "no config dir")]
+                )
             );
         }
         return Ok(Value::Num(-1));
@@ -130,7 +146,11 @@ fn handle_ai_ask(call: &Call, env: &mut Env, ctx: &ExecContext) -> Result<Value,
                 eprintln!(
                     "line {}: {}",
                     ctx.line,
-                    i18n::t(ctx.lang.get(), "ai.ask_failed", &[("reason", &e.to_string())])
+                    i18n::t(
+                        ctx.lang.get(),
+                        "ai.ask_failed",
+                        &[("reason", &e.to_string())]
+                    )
                 );
             }
             Ok(Value::Num(-1))
@@ -154,7 +174,11 @@ fn handle_ai_auto_filled(
         ));
     }
     let val_expr = call.args.get(1).ok_or_else(|| {
-        RuntimeError::new(ctx.line, &call.command, i18n::requires_args(ctx.lang.get(), 2))
+        RuntimeError::new(
+            ctx.line,
+            &call.command,
+            i18n::requires_args(ctx.lang.get(), 2),
+        )
     })?;
     eval_expr(val_expr, env, ctx)
 }

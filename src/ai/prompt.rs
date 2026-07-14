@@ -79,9 +79,11 @@ pub fn parse_response(body: &str) -> Result<HashMap<String, FilledValue>, String
             return Err(format!("no JSON object found in response: {preview}"));
         }
     };
-    let v: serde_json::Value = serde_json::from_str(json_str)
-        .map_err(|e| format!("invalid JSON: {e}"))?;
-    let obj = v.as_object().ok_or_else(|| "response is not a JSON object".to_string())?;
+    let v: serde_json::Value =
+        serde_json::from_str(json_str).map_err(|e| format!("invalid JSON: {e}"))?;
+    let obj = v
+        .as_object()
+        .ok_or_else(|| "response is not a JSON object".to_string())?;
     let mut map = HashMap::new();
     for (id, entry) in obj {
         let entry_obj = match entry.as_object() {

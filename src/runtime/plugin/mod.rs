@@ -170,13 +170,14 @@ impl PluginManager {
         };
 
         // 5. dlopen + init + on_load (+ set_credentials for v2).
-        let loader = PluginLoader::load(&lib_path, name, credentials_json.as_deref()).map_err(|e| {
-            RuntimeError::new(
-                line,
-                name,
-                crate::i18n::plugin_dlopen_failed(lang, name, &e.to_string()),
-            )
-        })?;
+        let loader =
+            PluginLoader::load(&lib_path, name, credentials_json.as_deref()).map_err(|e| {
+                RuntimeError::new(
+                    line,
+                    name,
+                    crate::i18n::plugin_dlopen_failed(lang, name, &e.to_string()),
+                )
+            })?;
 
         Ok(LoadedPlugin {
             name: name.to_string(),
@@ -198,11 +199,19 @@ impl PluginManager {
             RuntimeError::new(
                 line,
                 plugin_name,
-                crate::i18n::plugin_dlopen_failed(lang, plugin_name, "cannot determine credentials path"),
+                crate::i18n::plugin_dlopen_failed(
+                    lang,
+                    plugin_name,
+                    "cannot determine credentials path",
+                ),
             )
         })?;
         let creds_file = CredentialsFile::load(&toml_path).map_err(|e| {
-            RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e))
+            RuntimeError::new(
+                line,
+                plugin_name,
+                crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e),
+            )
         })?;
         let mut toml_fields: HashMap<String, String> = creds_file
             .plugins
@@ -212,21 +221,46 @@ impl PluginManager {
 
         // Check for missing required string fields → trigger interactive prompt.
         if let Some(spec) = spec {
-            let has_missing = spec.fields.iter()
+            let has_missing = spec
+                .fields
+                .iter()
                 .any(|f| f.r#type == "string" && !toml_fields.contains_key(&f.name));
             if has_missing {
-                crate::credentials::ensure_plugin_credentials(&toml_path, plugin_name, &spec.fields, lang)
-                    .map_err(|e| RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e)))?;
+                crate::credentials::ensure_plugin_credentials(
+                    &toml_path,
+                    plugin_name,
+                    &spec.fields,
+                    lang,
+                )
+                .map_err(|e| {
+                    RuntimeError::new(
+                        line,
+                        plugin_name,
+                        crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e),
+                    )
+                })?;
                 // Reload toml_fields after prompt.
                 let creds_file = CredentialsFile::load(&toml_path).map_err(|e| {
-                    RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e))
+                    RuntimeError::new(
+                        line,
+                        plugin_name,
+                        crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e),
+                    )
                 })?;
-                toml_fields = creds_file.plugins.get(plugin_name).cloned().unwrap_or_default();
+                toml_fields = creds_file
+                    .plugins
+                    .get(plugin_name)
+                    .cloned()
+                    .unwrap_or_default();
             }
         }
 
         build_credentials_json(spec, plugin_name, &toml_fields, lang).map_err(|e| {
-            RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e))
+            RuntimeError::new(
+                line,
+                plugin_name,
+                crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e),
+            )
         })
     }
 

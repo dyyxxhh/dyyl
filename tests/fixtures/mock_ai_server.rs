@@ -53,7 +53,11 @@ impl MockAiServer {
                 }
             }
         });
-        Self { port, requests, shutdown }
+        Self {
+            port,
+            requests,
+            shutdown,
+        }
     }
 
     pub fn stop(&self) {
@@ -68,7 +72,11 @@ impl MockAiServer {
 fn parse_http_request(raw: &str) -> (String, String) {
     let mut lines = raw.split("\r\n");
     let first_line = lines.next().unwrap_or("");
-    let path = first_line.split_whitespace().nth(1).unwrap_or("").to_string();
+    let path = first_line
+        .split_whitespace()
+        .nth(1)
+        .unwrap_or("")
+        .to_string();
     let mut body = String::new();
     let mut in_body = false;
     for line in lines {

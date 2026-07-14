@@ -3,7 +3,7 @@
 //! 端点：{base_url}/v1/messages（base_url 空 = https://api.anthropic.com）。
 //! 请求头：x-api-key + anthropic-version: 2023-06-01。
 
-use super::client::{HttpRequest, request_with_retry};
+use super::client::{request_with_retry, HttpRequest};
 use super::{AiError, AiErrorKind, AiProvider};
 use serde_json::Value;
 
@@ -20,7 +20,11 @@ pub struct AnthropicProvider {
 impl AnthropicProvider {
     #[must_use]
     pub fn new(api_key: String, model: String, base_url: String) -> Self {
-        Self { api_key, model, base_url }
+        Self {
+            api_key,
+            model,
+            base_url,
+        }
     }
 
     #[must_use]
@@ -48,7 +52,10 @@ impl AnthropicProvider {
             method: "POST".to_string(),
             headers: vec![
                 ("x-api-key".to_string(), self.api_key.clone()),
-                ("anthropic-version".to_string(), ANTHROPIC_VERSION.to_string()),
+                (
+                    "anthropic-version".to_string(),
+                    ANTHROPIC_VERSION.to_string(),
+                ),
                 ("Content-Type".to_string(), "application/json".to_string()),
             ],
             body: body.to_string(),
@@ -57,9 +64,8 @@ impl AnthropicProvider {
 
     /// 解析响应：content[*].text（找第一个 type=text 的）。
     pub fn parse_response(&self, body: &str) -> Result<String, AiError> {
-        let v: Value = serde_json::from_str(body).map_err(|e| {
-            AiError::new(AiErrorKind::Parse, format!("invalid JSON: {e}"), None)
-        })?;
+        let v: Value = serde_json::from_str(body)
+            .map_err(|e| AiError::new(AiErrorKind::Parse, format!("invalid JSON: {e}"), None))?;
         let content = v.get("content").and_then(|c| c.as_array());
         if let Some(arr) = content {
             for item in arr {
