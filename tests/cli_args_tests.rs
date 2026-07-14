@@ -206,3 +206,30 @@ fn injected_cli_dashdash_passthrough() {
     );
     assert_eq!(out.values[0], Value::Num(3));
 }
+
+use std::process::Command;
+
+#[test]
+fn binary_passes_args_after_filename() {
+    // 写一个临时脚本,打印 cli.count
+    let tmp = std::env::temp_dir().join("dyyl_cli_arg_test.dyyl");
+    std::fs::write(&tmp, "io.out cli.count\n").unwrap();
+    let output = Command::new("cargo")
+        .args(["run", "--", tmp.to_str().unwrap(), "--help", "foo"])
+        .output()
+        .expect("spawn");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("2"), "expected count=2, stdout was: {stdout}");
+}
+
+#[test]
+fn binary_preserves_existing_flags_before_filename() {
+    let tmp = std::env::temp_dir().join("dyyl_cli_lang_test.dyyl");
+    std::fs::write(&tmp, "io.out cli.count\n").unwrap();
+    let output = Command::new("cargo")
+        .args(["run", "--", "--lang", "zh", tmp.to_str().unwrap(), "a", "b", "c"])
+        .output()
+        .expect("spawn");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("3"), "expected count=3, stdout was: {stdout}");
+}
