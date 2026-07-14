@@ -25,6 +25,8 @@ pub struct Env {
     game_scope: GameChooseScope,
     mcm_id_counter: Cell<u64>,
     plugin_manager: Arc<PluginManager>,
+    script_args: Vec<String>,
+    script_name: String,
 }
 
 impl Env {
@@ -38,6 +40,8 @@ impl Env {
             game_scope: GameChooseScope::default(),
             mcm_id_counter: Cell::new(1),
             plugin_manager: Arc::new(PluginManager::new()),
+            script_args: Vec::new(),
+            script_name: String::new(),
         }
     }
 
@@ -122,6 +126,28 @@ impl Env {
     pub fn plugin_manager(&self) -> &PluginManager {
         &self.plugin_manager
     }
+
+    /// Set the command-line args passed to the script (after the filename).
+    pub fn set_script_args(&mut self, args: Vec<String>) {
+        self.script_args = args;
+    }
+
+    /// Get the command-line args passed to the script.
+    #[must_use]
+    pub fn script_args(&self) -> &[String] {
+        &self.script_args
+    }
+
+    /// Set the script filename (as passed on the command line, raw).
+    pub fn set_script_name(&mut self, name: String) {
+        self.script_name = name;
+    }
+
+    /// Get the raw script filename string.
+    #[must_use]
+    pub fn script_name(&self) -> &str {
+        &self.script_name
+    }
 }
 
 impl Default for Env {
@@ -177,5 +203,26 @@ mod tests {
     fn env_new_is_empty() {
         let env = Env::new();
         assert!(env.get("anything").is_none());
+    }
+
+    #[test]
+    fn env_script_args_default_empty() {
+        let env = Env::new();
+        assert!(env.script_args().is_empty());
+        assert!(env.script_name().is_empty());
+    }
+
+    #[test]
+    fn env_set_script_args() {
+        let mut env = Env::new();
+        env.set_script_args(vec!["--help".to_string(), "foo".to_string()]);
+        assert_eq!(env.script_args(), &["--help", "foo"]);
+    }
+
+    #[test]
+    fn env_set_script_name() {
+        let mut env = Env::new();
+        env.set_script_name("/path/to/a.dyyl".to_string());
+        assert_eq!(env.script_name(), "/path/to/a.dyyl");
     }
 }
