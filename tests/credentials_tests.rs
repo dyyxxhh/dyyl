@@ -96,3 +96,33 @@ fn prompt_ai_empty_api_key_returns_error() {
     ];
     assert!(prompt_ai_from_lines(&lines).is_err());
 }
+
+#[test]
+fn credentials_dir_for_plugin_returns_xdg_data_path() {
+    std::env::set_var("XDG_DATA_HOME", "/tmp/dyyl-test-xdg");
+    let dir = dyyl::credentials::credentials_dir_for_plugin("openpgp");
+    assert!(dir.ends_with("dyyl/credentials.d/openpgp"));
+    std::env::remove_var("XDG_DATA_HOME");
+}
+
+#[test]
+fn ensure_plugin_credentials_fails_on_eof() {
+    use dyyl::i18n::Lang;
+    use dyyl::runtime::plugin::manifest::CredentialField;
+
+    let tmpdir = std::env::temp_dir().join(format!("dyyl-cred-prompt-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&tmpdir);
+    std::fs::create_dir_all(&tmpdir).unwrap();
+    let creds_path = tmpdir.join("credentials.toml");
+
+    let fields = vec![CredentialField {
+        name: "token".to_string(),
+        r#type: "string".to_string(),
+        secret: true,
+        description: "API token".to_string(),
+    }];
+    let result = dyyl::credentials::ensure_plugin_credentials(&creds_path, "testplugin", &fields, Lang::En);
+    // In CI (no stdin / EOF), this should fail with "credential input aborted".
+    assert!(result.is_err());
+    let _ = std::fs::remove_dir_all(&tmpdir);
+}

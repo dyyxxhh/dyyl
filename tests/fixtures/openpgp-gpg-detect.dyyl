@@ -1,0 +1,8 @@
+# Golden fixture: openpgp plugin gpg detection
+# Covers: gpg.detect (returns dict {installed, path, version})
+# Requires: openpgp plugin installed at <xdg>/dyyl/plugins/openpgp/0.1.0/
+
+# Detect whether system gpg is installed
+# Returns dict {installed, path, version}; never errors
+set $r, openpgp.gpg.detect()
+io.out dict.get($r, installed)

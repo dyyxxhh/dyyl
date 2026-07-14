@@ -1,0 +1,15 @@
+# Golden fixture: openpgp plugin end-to-end roundtrip
+# Covers: key.generate -> encrypt -> decrypt
+# Requires: openpgp plugin installed at <xdg>/dyyl/plugins/openpgp/0.1.0/
+
+# Generate a keypair — returns 40-char hex fingerprint
+set $fp, openpgp.key.generate "test <test@example.com>", "test-pass"
+io.out $fp
+
+# Encrypt a message for that recipient — returns armored ciphertext
+set $ct, openpgp.encrypt "secret message", $fp
+io.out $ct
+
+# Decrypt the ciphertext — returns original plaintext
+set $pt, openpgp.decrypt $ct, "test-pass"
+io.out $pt

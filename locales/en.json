@@ -101,5 +101,9 @@
   "ai.prepass_failed": "prepass failed: {reason}",
   "ai.credential_aborted": "credential input aborted",
   "logic.end_without_open": "logic.end without open block",
-  "logic.unclosed_block": "unclosed block at line {line}"
+  "logic.unclosed_block": "unclosed block at line {line}",
+
+  "plugin.credential_prompt_header": "[dyyl] plugin '{name}' needs credentials, please enter:",
+  "plugin.credential_saved": "[dyyl] credentials saved to {path}",
+  "plugin.credentials_missing": "plugin '{name}' missing credentials: {fields}"
 }

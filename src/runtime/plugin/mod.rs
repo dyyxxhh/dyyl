@@ -6,6 +6,7 @@
 //! l.dyyapp.com, downloads+verifies the library, dlopens it, and dispatches.
 
 pub mod abi;
+pub mod creds_inject;
 pub mod fetch;
 pub mod loader;
 pub mod manifest;
@@ -18,9 +19,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+use crate::credentials::CredentialsFile;
 use crate::i18n::Lang;
 use crate::runtime::error::RuntimeError;
 use crate::runtime::plugin::abi::DYRL_API_VERSION;
+use crate::runtime::plugin::creds_inject::build_credentials_json;
 use crate::runtime::plugin::fetch::FetchError;
 use crate::runtime::plugin::loader::PluginLoader;
 use crate::runtime::plugin::manifest::{InstalledRecord, LocalPluginToml, RemoteManifest};
@@ -157,8 +160,17 @@ impl PluginManager {
             )
         })?;
 
-        // 4. dlopen + init + on_load.
-        let loader = PluginLoader::load(&lib_path, name, None).map_err(|e| {
+        // 4. Assemble credentials JSON. Only ABI v2 plugins export
+        //    `set_credentials`; v1 plugins have no such symbol, so passing
+        //    `Some(..)` would fail symbol lookup for them.
+        let credentials_json = if manifest.abi_version >= 2 {
+            Some(self.assemble_credentials(name, manifest.credentials.as_ref(), lang, line)?)
+        } else {
+            None
+        };
+
+        // 5. dlopen + init + on_load (+ set_credentials for v2).
+        let loader = PluginLoader::load(&lib_path, name, credentials_json.as_deref()).map_err(|e| {
             RuntimeError::new(
                 line,
                 name,
@@ -170,6 +182,51 @@ impl PluginManager {
             name: name.to_string(),
             loader,
             manifest,
+        })
+    }
+
+    /// Read credentials.toml, resolve field types, build JSON for `set_credentials`.
+    #[allow(clippy::unused_self)]
+    fn assemble_credentials(
+        &self,
+        plugin_name: &str,
+        spec: Option<&crate::runtime::plugin::manifest::CredentialsSpec>,
+        lang: Lang,
+        line: usize,
+    ) -> Result<String, RuntimeError> {
+        let toml_path = CredentialsFile::default_path().ok_or_else(|| {
+            RuntimeError::new(
+                line,
+                plugin_name,
+                crate::i18n::plugin_dlopen_failed(lang, plugin_name, "cannot determine credentials path"),
+            )
+        })?;
+        let creds_file = CredentialsFile::load(&toml_path).map_err(|e| {
+            RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e))
+        })?;
+        let mut toml_fields: HashMap<String, String> = creds_file
+            .plugins
+            .get(plugin_name)
+            .cloned()
+            .unwrap_or_default();
+
+        // Check for missing required string fields → trigger interactive prompt.
+        if let Some(spec) = spec {
+            let has_missing = spec.fields.iter()
+                .any(|f| f.r#type == "string" && !toml_fields.contains_key(&f.name));
+            if has_missing {
+                crate::credentials::ensure_plugin_credentials(&toml_path, plugin_name, &spec.fields, lang)
+                    .map_err(|e| RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e)))?;
+                // Reload toml_fields after prompt.
+                let creds_file = CredentialsFile::load(&toml_path).map_err(|e| {
+                    RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e))
+                })?;
+                toml_fields = creds_file.plugins.get(plugin_name).cloned().unwrap_or_default();
+            }
+        }
+
+        build_credentials_json(spec, plugin_name, &toml_fields, lang).map_err(|e| {
+            RuntimeError::new(line, plugin_name, crate::i18n::plugin_dlopen_failed(lang, plugin_name, &e))
         })
     }
 

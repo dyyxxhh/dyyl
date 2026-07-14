@@ -101,5 +101,9 @@
   "ai.prepass_failed": "预扫描失败: {reason}",
   "ai.credential_aborted": "凭证输入中止",
   "logic.end_without_open": "logic.end 无开放块",
-  "logic.unclosed_block": "第 {line} 行块未关闭"
+  "logic.unclosed_block": "第 {line} 行块未关闭",
+
+  "plugin.credential_prompt_header": "[dyyl] 插件 '{name}' 需要凭证，请输入:",
+  "plugin.credential_saved": "[dyyl] 凭证已保存到 {path}",
+  "plugin.credentials_missing": "插件 '{name}' 缺少凭证: {fields}"
 }

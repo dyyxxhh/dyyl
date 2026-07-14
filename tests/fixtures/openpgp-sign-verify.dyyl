@@ -1,0 +1,14 @@
+# Golden fixture: openpgp plugin sign + verify
+# Covers: key.generate -> sign (detached) -> verify
+# Requires: openpgp plugin installed at <xdg>/dyyl/plugins/openpgp/0.1.0/
+
+# Generate a keypair for signing
+set $fp, openpgp.key.generate "signer <signer@example.com>", "test-pass"
+
+# Sign text with a detached signature (detach = "1")
+set $sig, openpgp.sign "hello world", $fp, "1", "test-pass"
+
+# Verify the detached signature against the original text
+# Returns dict {valid, signer_uid, signer_fp}
+set $result, openpgp.verify $sig, "hello world"
+io.out dict.get($result, valid)

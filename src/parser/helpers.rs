@@ -15,6 +15,31 @@ pub(super) fn first_word(s: &str) -> &str {
     }
 }
 
+/// Check if `name` looks like a plugin command name: `<identifier>.<rest>`,
+/// not in the known arity table. The first segment (before the first dot)
+/// must be a valid identifier (starts with ASCII letter/underscore,
+/// alphanumeric/underscore only) so decimal numbers like `1.5` and other
+/// non-command literals are not misclassified. These are routed by the
+/// dispatcher's plugin fallback arm (`<plugin>.<sub>[.<sub>...]`).
+pub(super) fn is_plugin_command_name(name: &str) -> bool {
+    if !name.contains('.') {
+        return false;
+    }
+    if known_arity(name).is_some() {
+        return false;
+    }
+    let first_segment = name.split('.').next().unwrap_or("");
+    if first_segment.is_empty() {
+        return false;
+    }
+    let mut chars = first_segment.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
+        _ => return false,
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
 /// Check if `s` starts with a known command name (followed by whitespace or
 /// `(`).
 pub(super) fn is_command_start(s: &str) -> bool {
@@ -22,10 +47,19 @@ pub(super) fn is_command_start(s: &str) -> bool {
     if known_arity(first).is_some() {
         return true;
     }
+    // Plugin command names (dotted, not in known_arity) — routed by the
+    // dispatcher's plugin fallback arm.
+    if is_plugin_command_name(first) {
+        return true;
+    }
     // Also match command_name(...) directly
     if let Some(paren_pos) = s.find('(') {
         let candidate = &s[..paren_pos];
         if known_arity(candidate).is_some() {
+            return true;
+        }
+        // Plugin command paren form: `plugin.sub(...)`
+        if is_plugin_command_name(candidate) {
             return true;
         }
     }
@@ -36,9 +70,11 @@ pub(super) fn is_command_start(s: &str) -> bool {
 pub(super) fn is_paren_call(s: &str) -> bool {
     if let Some(paren_pos) = s.find('(') {
         let candidate = &s[..paren_pos];
-        if known_arity(candidate).is_some() && !candidate.contains(char::is_whitespace) {
-            let before_paren = &s[..paren_pos];
-            return !before_paren.contains(char::is_whitespace) && s[paren_pos..].starts_with('(');
+        if candidate.contains(char::is_whitespace) {
+            return false;
+        }
+        if known_arity(candidate).is_some() || is_plugin_command_name(candidate) {
+            return s[paren_pos..].starts_with('(');
         }
     }
     false

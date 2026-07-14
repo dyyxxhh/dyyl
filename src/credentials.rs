@@ -265,3 +265,61 @@ pub fn ensure_ai(path: &Path, lang: Lang) -> Result<AiCredentials, String> {
     }
     ensure_ai_interactive(path, lang)
 }
+
+/// Return the per-plugin credentials directory under XDG data:
+/// `<xdg_data>/dyyl/credentials.d/<plugin_name>/`.
+///
+/// Used for `type: "file"` and `type: "directory"` credential fields
+/// that may hold large or dynamic blobs (e.g. `OpenPGP` keys).
+/// Does NOT create the directory; callers create on demand with 0700.
+///
+/// # Panics
+///
+/// Panics if the XDG data directory cannot be determined (e.g. no valid home).
+#[must_use]
+pub fn credentials_dir_for_plugin(plugin_name: &str) -> std::path::PathBuf {
+    let proj = directories::ProjectDirs::from("dev", "lucky", "dyyl")
+        .expect("unable to determine XDG data directory");
+    proj.data_dir()
+        .join("credentials.d")
+        .join(plugin_name)
+}
+
+/// Ensure required `string` credential fields for `plugin_name` are present.
+///
+/// Missing fields are prompted interactively (stderr question + stdin read)
+/// and saved to `credentials.toml`. `secret: true` fields use no-echo input.
+/// After successful completion, `[plugin.<name>]` contains all declared
+/// string fields. `file`/`directory` types are skipped (handled by injection).
+pub fn ensure_plugin_credentials(
+    path: &std::path::Path,
+    plugin_name: &str,
+    fields: &[crate::runtime::plugin::manifest::CredentialField],
+    lang: crate::i18n::Lang,
+) -> Result<(), String> {
+    use std::io::{BufRead, Write};
+    let mut file = CredentialsFile::load(path)?;
+    let plugin_fields = file.plugins.entry(plugin_name.to_string()).or_default();
+
+    let missing: Vec<&crate::runtime::plugin::manifest::CredentialField> = fields.iter()
+        .filter(|f| f.r#type == "string" && !plugin_fields.contains_key(&f.name))
+        .collect();
+    if missing.is_empty() {
+        return Ok(());
+    }
+
+    eprintln!("{}", crate::i18n::t(lang, "plugin.credential_prompt_header", &[("name", plugin_name)]));
+    let stdin = std::io::stdin();
+    for f in missing {
+        let desc = if f.description.is_empty() { &f.name } else { &f.description };
+        eprint!("  {desc}: ");
+        let _ = std::io::stderr().flush();
+        let line = stdin.lock().lines().next()
+            .ok_or_else(|| "credential input aborted".to_string())?
+            .map_err(|e| format!("stdin read error: {e}"))?;
+        plugin_fields.insert(f.name.clone(), line.trim().to_string());
+    }
+    file.save(path)?;
+    eprintln!("{}", crate::i18n::t(lang, "plugin.credential_saved", &[("path", &path.display().to_string())]));
+    Ok(())
+}

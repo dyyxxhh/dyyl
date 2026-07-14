@@ -1,0 +1,11 @@
+# Golden fixture: openpgp plugin symmetric encrypt/decrypt
+# Covers: sym.encrypt -> sym.decrypt
+# Requires: openpgp plugin installed at <xdg>/dyyl/plugins/openpgp/0.1.0/
+
+# Symmetrically encrypt text with a passphrase
+set $ct, openpgp.sym.encrypt "secret data", "my-passphrase"
+io.out $ct
+
+# Decrypt the symmetric ciphertext with the same passphrase
+set $pt, openpgp.sym.decrypt $ct, "my-passphrase"
+io.out $pt

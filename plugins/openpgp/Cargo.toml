@@ -1,0 +1,38 @@
+[package]
+name = "openpgp-plugin"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+
+[lib]
+name = "openpgp"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+sequoia-openpgp = { version = "2", default-features = true, features = ["compression-deflate"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+shell-words = "1"
+which = "6"
+base64 = "0.22"
+tempfile = "3"
+
+[profile.release]
+panic = "abort"
+opt-level = 3
+lto = true
+
+[dev-dependencies]
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+indexing_slicing = "deny"
