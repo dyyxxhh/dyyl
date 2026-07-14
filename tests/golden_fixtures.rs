@@ -153,3 +153,29 @@ fn golden_mcm_unknown() {
         "stderr must mention the offending command, got: {stderr}"
     );
 }
+
+// ── cli-args.dyyl ────────────────────────────────────────────────────
+
+/// Runs cli-args.dyyl with two args and verifies the script reads them
+/// via cli.* commands.
+#[test]
+fn golden_cli_args() {
+    let bin = dyyl_bin();
+    let root = repo_root();
+    let path = format!("{root}/tests/fixtures/cli-args.dyyl");
+
+    let output = Command::new(&bin)
+        .arg(&path)
+        .arg("--help")
+        .arg("foo")
+        .output()
+        .expect("failed to execute dyyl binary");
+
+    let code = output.status.code().unwrap_or(-1);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(code, 0, "exit code must be 0, stderr was: {stderr}");
+    // 脚本应打印 count=2 和 name=cli-args.dyyl
+    assert!(stdout.contains("count: 2"), "stdout was: {stdout}");
+    assert!(stdout.contains("name: cli-args.dyyl"), "stdout was: {stdout}");
+}
